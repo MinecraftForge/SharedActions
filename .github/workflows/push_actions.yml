@@ -1,0 +1,25 @@
+name: 'Push actions'
+
+on:
+  workflow_call:
+    secrets:
+      GH_APP_NAME:
+        required: true
+      GH_APP_KEY:
+        required: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  discussions: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: MinecraftForge/Actionable@v1
+        with:
+          gh_app_key: ${{ secrets.GH_APP_KEY }}
+          gh_app_name: ${{ secrets.GH_APP_NAME }}
+          triage_team: triage
