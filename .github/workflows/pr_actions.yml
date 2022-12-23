@@ -24,5 +24,5 @@ jobs:
           gh_app_name: ${{ secrets.GH_APP_NAME }}
           triage_team: triage
           triage_project: 4
-          labels_to_teams: 'default -> u: thecurle + lexmanos, rendering -> rendering, LTS Backport -> legacy'
+          labels_to_teams: 'default -> thecurle + lexmanos, rendering -> rendering, LTS Backport -> legacy'
           latest_version: 1.19

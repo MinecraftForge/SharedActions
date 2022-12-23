@@ -15,7 +15,7 @@ permissions:
   discussions: write
 
 jobs:
-  triage:
+  check_pr_conflicts:
     runs-on: ubuntu-latest
     steps:
       - uses: MinecraftForge/Actionable@v1
