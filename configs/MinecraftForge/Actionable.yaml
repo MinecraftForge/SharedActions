@@ -6,13 +6,8 @@ labels:
   assigned: "Assigned"
   new_event: "New Event"
   triage: "Triage"
-  latest: "latest"
+  latest: "1.19"
 labelLocks:
-  Spam:
-    lock: true
-    lockReason: "spam"
-    close: true
-    message: null
   Forum:
     lock: true
     lockReason: null
@@ -21,13 +16,24 @@ labelLocks:
       :wave: We use the issue tracker exclusively for final bug reports and feature requests.
       However, this issue appears to be better suited for the [Forge Support Forums](https://forums.minecraftforge.net/) or [Forge Discord](https://discord.gg/UvedJ9m).
       Please create a new topic on the support forum with this issue or ask in the `#tech-support` channel in the Discord server, and the conversation can continue there.
+  Spam:
+    lock: true
+    lockReason: "spam"
+    close: true
+    message: null
 triage:
   teamName: "triage"
   projectId: 4
-labelTeams: {}
+labelTeams:
+  default:
+  - "TheCurle"
+  - "LexManos"
+  Rendering: "rendering"
+  LTS Backport: "legacy"
 commands:
   prefixes:
   - "/"
+  - "@autoforge "
   allowEdits: false
   minimizeComment: true
   reactToComment: true
