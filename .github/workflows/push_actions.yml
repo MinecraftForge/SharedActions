@@ -22,4 +22,4 @@ jobs:
         with:
           gh_app_key: ${{ secrets.GH_APP_KEY }}
           gh_app_name: ${{ secrets.GH_APP_NAME }}
-          triage_team: triage
+          config_directory: MinecraftForge/SharedActions:configs@main
