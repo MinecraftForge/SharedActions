@@ -6,7 +6,7 @@ labels:
   assigned: "Assigned"
   new_event: "New Event"
   triage: "Triage"
-  latest: "latest"
+  latest: "1.19"
 labelLocks:
   Forum:
     lock: true
@@ -24,10 +24,16 @@ labelLocks:
 triage:
   teamName: "triage"
   projectId: 4
-labelTeams: {}
+labelTeams:
+  default:
+  - "TheCurle"
+  - "LexManos"
+  Rendering: "rendering"
+  LTS Backport: "legacy"
 commands:
   prefixes:
   - "/"
+  - "@autoforge "
   allowEdits: false
   minimizeComment: true
   reactToComment: true
