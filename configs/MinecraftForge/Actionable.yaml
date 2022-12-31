@@ -27,7 +27,7 @@ triage:
 labelTeams:
   default:
   - "TheCurle"
-  - "LexManos"
+  - "SciWhiz12"
   Rendering: "rendering"
   LTS Backport: "legacy"
 commands:
