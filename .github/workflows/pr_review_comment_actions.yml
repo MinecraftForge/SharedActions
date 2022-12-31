@@ -1,0 +1,22 @@
+name: 'PR Review Comment Actions'
+
+on:
+  workflow_call:
+    secrets:
+      GH_APP_NAME:
+        required: true
+      GH_APP_KEY:
+        required: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  discussions: write
+
+jobs:
+  dummy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy step
+        run: echo This action currently does nothing.

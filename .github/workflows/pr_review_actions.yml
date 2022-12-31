@@ -1,4 +1,4 @@
-name: 'PR Actions'
+name: 'PR Review Actions'
 
 on:
   workflow_call:
