@@ -28,7 +28,7 @@ labelLocks:
     message: |-
       :wave: Thank you for your contribution.
       Unfortunately, we do not accept low effort PRs, be it typo fixes or trivial code formatting changes.
-      If you would like inspiration or ideas, you can take a look at the open [issues](https://github.com/MinecraftForge/MinecraftForge/issues), or join our [Discord server](https://discord.minecraftforge.net/).
+      For inspiration or ideas, you can take a look at the open [issues](https://github.com/MinecraftForge/MinecraftForge/issues), or join our [Discord server](https://discord.minecraftforge.net/).
 triage:
   teamName: "triage"
   projectId: 4
