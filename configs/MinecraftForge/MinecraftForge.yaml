@@ -21,6 +21,14 @@ labelLocks:
     lockReason: "spam"
     close: true
     message: null
+  Trivial:
+    lock: false
+    lockReason: null
+    close: true
+    message: |-
+      :wave: Thank you for your contribution.
+      Unfortunately, we do not accept low effort PRs, be it typo fixes or meaningless code formatting changes.
+      If you would like inspiration for ideas you can take a look at the open [issues](https://github.com/MinecraftForge/MinecraftForge/issues) or look for ideas on our [Discord server](https://discord.minecraftforge.net/).
 triage:
   teamName: "triage"
   projectId: 4
