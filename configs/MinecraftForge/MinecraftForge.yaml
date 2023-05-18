@@ -1,7 +1,7 @@
 labels:
   feature: "Feature"
   needs_rebase: "Needs Rebase"
-  lts: "LTS Backport"
+  lts: "LTS"
   rendering: "Rendering"
   assigned: "Assigned"
   new_event: "New Event"
@@ -36,6 +36,7 @@ labelTeams:
   default:
   - "TheCurle"
   - "LexManos"
+  - "SizableShrimp"
   Rendering: "rendering"
   LTS Backport: "legacy"
 commands:
