@@ -38,7 +38,7 @@ labelTeams:
   - "LexManos"
   - "SizableShrimp"
   Rendering: "rendering"
-  LTS Backport: "legacy"
+  LTS: "legacy"
 commands:
   prefixes:
   - "/"
