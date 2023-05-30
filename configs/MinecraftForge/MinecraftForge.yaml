@@ -43,6 +43,7 @@ commands:
   prefixes:
   - "/"
   - "@autoforge "
+  - "@autoforge[bot] "
   allowEdits: false
   minimizeComment: true
   reactToComment: true
