@@ -6,7 +6,7 @@ labels:
   assigned: "Assigned"
   new_event: "New Event"
   triage: "Triage"
-  latest: "1.19"
+  latest: "1.20"
 labelLocks:
   Forum:
     lock: true
