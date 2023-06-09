@@ -29,6 +29,14 @@ labelLocks:
       :wave: Thank you for your contribution.
       Unfortunately, we do not accept low effort PRs, be it typo fixes or trivial code formatting changes.
       For inspiration or ideas, you can take a look at the open [issues](https://github.com/MinecraftForge/MinecraftForge/issues), or join our [Discord server](https://discord.minecraftforge.net/).
+  "EOL Forum":
+    lock: true
+    lockReason: null
+    close: true
+    message: |-
+      :wave: We use the issue tracker exclusively for final bug reports and feature requests.
+      Unfortunately, it seems like your issue is for an unsupported version.
+      If that is not the case, please reach out on the [Forge Support Forums](https://forums.minecraftforge.net/) or the [Forge Discord](https://discord.minecraftforge.net/).
 triage:
   teamName: "triage"
   projectId: 4
