@@ -1,0 +1,75 @@
+name: Gradle CI
+
+on:
+  workflow_call:
+    inputs:
+      java:
+        description: "The version of Java to use to run Gradle" # Note: Gradle's Java toolchains feature is used for compiling, which is separate from this
+        required: false
+        type: string
+        default: "17"
+      tasks:
+        description: "The Gradle tasks to run"
+        required: false
+        type: string
+        default: "publish"
+
+  workflow_dispatch:
+    inputs:
+      java:
+        description: "The version of Java to use to run Gradle"
+        required: false
+        type: choice
+        default: "17"
+        options:
+          - "21"
+          - "17"
+          - "11"
+          - "8"
+      tasks:
+        description: "The Gradle tasks to run"
+        required: false
+        type: string
+        default: "publish"
+
+permissions:
+  contents: read
+
+jobs:
+  notify-discord-start:
+    name: Notify Discord (start)
+    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
+    with:
+      build_status: started
+    secrets:
+      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+  gradle-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make Gradle executable
+        # language=bash
+        run: chmod +x ./gradlew
+
+      - name: Setup Java 17
+        # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#java
+        # language=bash
+        run: export JAVA_HOME=$(echo $JAVA_HOME_${{ inputs.java }}_X64)
+
+      - name: Gradle ${{ inputs.tasks }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ${{ inputs.tasks }}
+
+  notify-discord-end:
+    name: Notify Discord (end)
+    needs: [ "notify-discord-start", "gradle-tasks" ]
+    if: ${{ always() }}
+    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
+    with:
+      build_status: ${{ needs.gradle-tasks.result }}
+      build_number: ${{ needs.notify-discord-start.outputs.build_number }}
+    secrets:
+      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
