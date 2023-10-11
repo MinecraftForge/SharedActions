@@ -8,11 +8,31 @@ on:
         required: false
         type: string
         default: "17"
-      tasks:
+      gradle_tasks:
         description: "The Gradle tasks to run"
         required: false
         type: string
         default: "publish"
+      artifact_group:
+        description: "Maven group"
+        required: false
+        type: string
+        default: "net.minecraftforge"
+      artifact_name:
+        description: "Maven artifact"
+        required: false
+        type: string
+        default: "forge"
+      artifact_version:
+        description: "Maven version"
+        required: false
+        type: string
+        default: "???"
+      promotion_type:
+        description: "Promotion type"
+        required: false
+        type: string
+        default: "latest"
 
   workflow_dispatch:
     inputs:
@@ -26,11 +46,29 @@ on:
           - "17"
           - "11"
           - "8"
-      tasks:
+      gradle_tasks:
         description: "The Gradle tasks to run"
         required: false
         type: string
         default: "publish"
+      artifact_group:
+        description: "Maven group"
+        required: false
+        type: string
+        default: "net.minecraftforge"
+      artifact_name:
+        description: "Maven artifact"
+        required: false
+        type: string
+        default: "forge"
+      promotion_type:
+        description: "Promotion type"
+        required: false
+        type: choice
+        default: "latest"
+        options:
+          - "latest"
+          - "recommended"
 
 permissions:
   contents: read
@@ -44,7 +82,7 @@ jobs:
     secrets:
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
-  gradle-tasks:
+  gradle:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,18 +96,33 @@ jobs:
         # language=bash
         run: export JAVA_HOME=$(echo $JAVA_HOME_${{ inputs.java }}_X64)
 
-      - name: Gradle ${{ inputs.tasks }}
+      - name: Gradle ${{ inputs.gradle_tasks }}
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: ${{ inputs.tasks }}
+          arguments: ${{ inputs.gradle_tasks }}
 
   notify-discord-end:
     name: Notify Discord (end)
-    needs: [ "notify-discord-start", "gradle-tasks" ]
+    needs: [ "notify-discord-start", "gradle" ]
     if: ${{ always() }}
     uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
-      build_status: ${{ needs.gradle-tasks.result }}
+      build_status: ${{ needs.gradle.result }}
       build_number: ${{ needs.notify-discord-start.outputs.build_number }}
     secrets:
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+  promote-artifact:
+    name: Promote artifact
+    needs: [ "notify-discord-start", "gradle" ]
+    if: needs.gradle.result == 'success'
+    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
+    with:
+      group: ${{ inputs.artifact_group }}
+      artifact: ${{ inputs.artifact_name }}
+      version: ${{ needs.notify-discord-start.outputs.build_number }}
+      type: ${{ inputs.promotion_type }}
+    secrets:
+      webhook_url: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK_URL }}
+      username: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+      password: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
