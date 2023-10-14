@@ -22,7 +22,7 @@ on:
         description: "Maven artifact"
         required: true
         type: string
-        default: "don't promote"
+        default: "dont promote"
       artifact_version:
         description: "Maven version"
         required: false
@@ -60,7 +60,7 @@ on:
         description: "Maven artifact"
         required: false
         type: string
-        default: "don't promote"
+        default: "dont promote"
       promotion_type:
         description: "Promotion type"
         required: false
@@ -115,7 +115,7 @@ jobs:
   promote-artifact:
     name: Promote artifact
     needs: [ "notify-discord-start", "gradle" ]
-    if: needs.gradle.result == 'success' && inputs.artifact_name != "don't promote"
+    if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote'
     uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
     with:
       group: ${{ inputs.artifact_group }}
