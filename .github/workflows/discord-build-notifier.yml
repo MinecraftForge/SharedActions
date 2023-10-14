@@ -1,0 +1,147 @@
+name: Notify Discord about build status
+
+on:
+  workflow_call:
+    inputs:
+      build_status:
+        required: true
+        type: string
+      build_number:
+        required: false
+        type: string
+        default: "???"
+      author_icon_url:
+        required: false
+        type: string
+        default: "https://avatars.githubusercontent.com/u/1390178"
+    secrets:
+      webhook_url:
+        required: true
+    outputs:
+      build_number:
+        value: ${{ jobs.notify-discord.outputs.build_number }}
+
+jobs:
+  notify-discord:
+    name: Notify Discord
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+        if: inputs.build_number == '???'
+
+      - name: Get git commit description
+        # language=bash
+        run: |
+          echo "GIT_COMMIT_DESC=$(git describe --tags)" >> $GITHUB_ENV
+          echo "GIT_COMMIT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        if: inputs.build_number == '???'
+
+      - name: Get build number
+        id: get-build-number
+        uses: actions/github-script@v6
+        env:
+          build_number: ${{ inputs.build_number }}
+          commit_desc: ${{ env.GIT_COMMIT_DESC }}
+          commit_tag: ${{ env.GIT_COMMIT_TAG }}
+        with:
+          result-encoding: string
+          # language=js
+          script: |
+            'use strict';
+            const { build_number, commit_desc, commit_tag } = process.env
+            
+            // if we have a build number, use it.
+            if (build_number !== '???') return build_number
+            
+            // initialise fallback build number
+            let buildNumber = '???'
+            
+            // split the description. assume tag-offset-sha.
+            const splitDesc = commit_desc.split('-', 2)
+            
+            // if the split desc has more than one -, it means it probably has the info we need
+            if (splitDesc.length > 1) {
+                buildNumber = splitDesc[0] + '.' + splitDesc[1]
+            }
+            
+            return buildNumber;
+
+      - name: Create JSON embed for Discord
+        id: create-json
+        uses: actions/github-script@v6
+        env:
+          build_status: ${{ inputs.build_status }}
+          build_number: ${{ steps.get-build-number.outputs.result }}
+          ref_type: ${{ github.ref_type }}
+          ref_name: ${{ github.ref_name }}
+          author_icon_url: ${{ inputs.author_icon_url }}
+        with:
+          result-encoding: string
+          # language=js
+          script: |
+            'use strict';
+            const capitalise = (str) => str.charAt(0).toUpperCase() + str.slice(1)
+            const { build_status, build_number, ref_type, ref_name, author_icon_url } = process.env
+            
+            const title = capitalise(build_status)
+            let colour
+            switch (title) {
+                case 'Success':
+                    colour = 2684508
+                    break
+                case 'Failure':
+                case 'Cancelled':
+                    colour = 16071719
+                    break
+                case 'Started':
+                    colour = 3224808
+                    break
+            }
+            
+            const json = {
+                username: 'GitHub Actions',
+                avatar_url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
+                embeds: [{
+                    author: {
+                        name: context.payload.repository.name,
+                        url: context.payload.repository.html_url,
+                        icon_url: `${author_icon_url}`
+                    },
+                    url: `${context.payload.repository.html_url}/actions/runs/${context.runId}`,
+                    title: `${title}`,
+                    color: `${colour}`,
+                    fields: []
+                }]
+            }
+            
+            json.embeds[0].fields.push({
+                name: 'Build number',
+                value: build_number,
+                inline: true
+            })
+            
+            json.embeds[0].fields.push({
+                name: `Build ${ref_type}`,
+                value: `${ref_name}`,
+                inline: true
+            })
+            
+            if (title === 'Started') {
+                json.embeds[0].fields.push({
+                    name: 'Commit message',
+                    value: `${context.payload.head_commit.message}`
+                })
+            }
+            
+            return JSON.stringify(json)
+
+      - name: Send notification
+        # language=bash
+        run: |
+          curl --http2-prior-knowledge --tlsv1.3 --false-start --tcp-fastopen --compressed -sS -m 10 -H "Content-Type: application/json" --request POST -d '${{ steps.create-json.outputs.result }}' ${{ env.DISCORD_WEBHOOK }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.webhook_url }}
+    outputs:
+      build_number: ${{ steps.get-build-number.outputs.result }}
