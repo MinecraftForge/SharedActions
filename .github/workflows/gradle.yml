@@ -20,9 +20,8 @@ on:
         default: "net.minecraftforge"
       artifact_name:
         description: "Maven artifact"
-        required: false
+        required: true
         type: string
-        default: "forge"
       artifact_version:
         description: "Maven version"
         required: false
