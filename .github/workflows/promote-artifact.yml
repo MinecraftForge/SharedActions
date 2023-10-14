@@ -89,8 +89,8 @@ jobs:
       - name: Notify webhook
         # language=bash
         run: |
-          curl --tlsv1.3 --compressed -sS -m 10 -u "${{ env.USERNAME }}:${{ env.PASSWORD }}" -H "Content-Type: application/json" --request POST -d '${{ steps.create-json.outputs.result }}' ${{ env.PAGEGEN_WEBHOOK_URL }}
+          curl --tlsv1.3 --compressed -sS -m 10 -u "${{ env.USERNAME }}:${{ env.PASSWORD }}" -H "Content-Type: application/json" --request POST -d '${{ steps.create-json.outputs.result }}' ${{ env.PAGEGEN_WEBHOOK }}
         env:
-          PAGEGEN_WEBHOOK_URL: ${{ secrets.webhook_url }}
+          PAGEGEN_WEBHOOK: ${{ secrets.webhook_url }}
           USERNAME: ${{ secrets.username }}
           PASSWORD: ${{ secrets.password }}
