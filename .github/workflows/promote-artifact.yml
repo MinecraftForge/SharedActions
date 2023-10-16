@@ -21,11 +21,11 @@ on:
         type: string
         default: "latest"
     secrets:
-      webhook_url:
+      PROMOTE_ARTIFACT_WEBHOOK:
         required: true
-      username:
+      PROMOTE_ARTIFACT_USERNAME:
         required: true
-      password:
+      PROMOTE_ARTIFACT_PASSWORD:
         required: true
 
   workflow_dispatch:
@@ -50,13 +50,6 @@ on:
         options:
           - "latest"
           - "recommended"
-    secrets:
-      webhook_url:
-        required: true
-      username:
-        required: true
-      password:
-        required: true
 
 jobs:
   promote-artifact:
@@ -89,8 +82,8 @@ jobs:
       - name: Notify webhook
         # language=bash
         run: |
-          curl --tlsv1.3 --compressed -sS -m 10 -u "${{ env.USERNAME }}:${{ env.PASSWORD }}" -H "Content-Type: application/json" --request POST -d '${{ steps.create-json.outputs.result }}' ${{ env.PAGEGEN_WEBHOOK }}
+          curl --tlsv1.3 --compressed -sS -m 10 -u "${{ env.PROMOTE_ARTIFACT_USERNAME }}:${{ env.PROMOTE_ARTIFACT_PASSWORD }}" -H "Content-Type: application/json" --request POST -d '${{ steps.create-json.outputs.result }}' ${{ env.PROMOTE_ARTIFACT_WEBHOOK }}
         env:
-          PAGEGEN_WEBHOOK: ${{ secrets.webhook_url }}
-          USERNAME: ${{ secrets.username }}
-          PASSWORD: ${{ secrets.password }}
+          PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
+          PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+          PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
