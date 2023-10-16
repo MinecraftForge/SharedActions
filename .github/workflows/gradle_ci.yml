@@ -20,7 +20,7 @@ on:
         default: "net.minecraftforge"
       artifact_name:
         description: "Maven artifact"
-        required: true
+        required: false
         type: string
         default: "dont promote"
       artifact_version:
@@ -33,42 +33,19 @@ on:
         required: false
         type: string
         default: "latest"
-
-  workflow_dispatch:
-    inputs:
-      java:
-        description: "The version of Java to use to run Gradle"
-        required: false
-        type: choice
-        default: "17"
-        options:
-          - "21"
-          - "17"
-          - "11"
-          - "8"
-      gradle_tasks:
-        description: "The Gradle tasks to run"
-        required: false
-        type: string
-        default: "publish"
-      artifact_group:
-        description: "Maven group"
-        required: false
-        type: string
-        default: "net.minecraftforge"
-      artifact_name:
-        description: "Maven artifact"
-        required: false
-        type: string
-        default: "dont promote"
-      promotion_type:
-        description: "Promotion type"
-        required: false
-        type: choice
-        default: "latest"
-        options:
-          - "latest"
-          - "recommended"
+    secrets:
+      DISCORD_WEBHOOK:
+        required: true
+      PROMOTE_ARTIFACT_WEBHOOK:
+        required: true
+      PROMOTE_ARTIFACT_USERNAME:
+        required: true
+      PROMOTE_ARTIFACT_PASSWORD:
+        required: true
+      MAVEN_USER:
+        required: true
+      MAVEN_PASSWORD:
+        required: true
 
 permissions:
   contents: read
@@ -76,17 +53,18 @@ permissions:
 jobs:
   notify-discord-start:
     name: Notify Discord (start)
-    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
+    uses: ForgeGHActionsTestOrg/Actions/.github/workflows/discord_build_notifier.yml@main
     with:
       build_status: started
     secrets:
-      webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
   gradle:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 1000
           fetch-tags: true
 
       - name: Make Gradle executable
@@ -102,29 +80,32 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: ${{ inputs.gradle_tasks }}
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
   notify-discord-end:
     name: Notify Discord (end)
     needs: [ "notify-discord-start", "gradle" ]
     if: ${{ always() }}
-    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
+    uses: ForgeGHActionsTestOrg/Actions/.github/workflows/discord_build_notifier.yml@main
     with:
       build_status: ${{ needs.gradle.result }}
       build_number: ${{ needs.notify-discord-start.outputs.build_number }}
     secrets:
-      webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
+      DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
   promote-artifact:
     name: Promote artifact
     needs: [ "notify-discord-start", "gradle" ]
     if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote'
-    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/promote_artifact.yml@main
     with:
       group: ${{ inputs.artifact_group }}
       artifact: ${{ inputs.artifact_name }}
       version: ${{ needs.notify-discord-start.outputs.build_number }}
       type: ${{ inputs.promotion_type }}
     secrets:
-      webhook_url: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
-      username: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
-      password: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
+      PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
+      PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+      PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
