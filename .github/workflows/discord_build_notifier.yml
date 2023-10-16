@@ -28,7 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1000
+          fetch-tags: true
         if: inputs.build_number == '???'
 
       - name: Get git commit description
