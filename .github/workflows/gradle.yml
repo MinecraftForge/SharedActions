@@ -53,7 +53,7 @@ permissions:
 jobs:
   notify-discord-start:
     name: Notify Discord (start)
-    uses: MinecraftForge/SharedActions/.github/workflows/discord_build_notifier.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
       build_status: started
     secrets:
@@ -88,7 +88,7 @@ jobs:
     name: Notify Discord (end)
     needs: [ "notify-discord-start", "gradle" ]
     if: ${{ always() }}
-    uses: MinecraftForge/SharedActions/.github/workflows/discord_build_notifier.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
       build_status: ${{ needs.gradle.result }}
       build_number: ${{ needs.notify-discord-start.outputs.build_number }}
@@ -99,7 +99,7 @@ jobs:
     name: Promote artifact
     needs: [ "notify-discord-start", "gradle" ]
     if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote'
-    uses: MinecraftForge/SharedActions/.github/workflows/promote_artifact.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
     with:
       group: ${{ inputs.artifact_group }}
       artifact: ${{ inputs.artifact_name }}
