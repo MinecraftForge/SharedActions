@@ -35,7 +35,7 @@ jobs:
       - name: Get git commit description
         # language=bash
         run: |
-          echo "GIT_COMMIT_DESC=$(git describe --tags)" >> $GITHUB_ENV
+          echo "GIT_COMMIT_DESC=$(git describe --tags --long)" >> $GITHUB_ENV
           echo "GIT_COMMIT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
         if: inputs.build_number == '???'
 
