@@ -108,7 +108,7 @@ jobs:
   promote-artifact:
     name: Promote artifact
     needs: [ "notify-discord-start", "gradle" ]
-    if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote'
+    if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote' && inputs.artifact_names == ''
     uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
     with:
       group: ${{ inputs.artifact_group }}
@@ -123,7 +123,7 @@ jobs:
   promote-artifacts:
     name: Promote artifacts
     needs: [ "notify-discord-start", "gradle" ]
-    if: needs.gradle.result == 'success' && inputs.artifact_name == "don't promote" && input.artifact_names != ''
+    if: needs.gradle.result == 'success' && inputs.artifact_name == 'dont promote' && inputs.artifact_names != ''
     uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@main
     with:
       groups: ${{ inputs.artifact_groups }}
