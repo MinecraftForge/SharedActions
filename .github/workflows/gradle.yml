@@ -23,6 +23,16 @@ on:
         required: false
         type: string
         default: "dont promote"
+      artifact_groups:
+        description: "Maven groups CSV for multi-promotion. If only one group is specified, it will be used for all artifacts."
+        required: false
+        type: string
+        default: "net.minecraftforge"
+      artifact_names:
+        description: "Maven artifacts CSV for multi-promotion"
+        required: false
+        type: string
+        default: ""
       artifact_version:
         description: "Maven version"
         required: false
@@ -98,7 +108,7 @@ jobs:
   promote-artifact:
     name: Promote artifact
     needs: [ "notify-discord-start", "gradle" ]
-    if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote'
+    if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote' && inputs.artifact_names == ''
     uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
     with:
       group: ${{ inputs.artifact_group }}
@@ -109,3 +119,18 @@ jobs:
       PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
       PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
       PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
+
+  promote-artifacts:
+    name: Promote artifacts
+    needs: [ "notify-discord-start", "gradle" ]
+    if: needs.gradle.result == 'success' && inputs.artifact_name == 'dont promote' && inputs.artifact_names != ''
+    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@main
+    with:
+      groups: ${{ inputs.artifact_groups }}
+      artifacts: ${{ inputs.artifact_names }}
+      version: ${{ needs.notify-discord-start.outputs.build_number }}
+      type: ${{ inputs.promotion_type }}
+    secrets:
+      webhook_url: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK_URL }}
+      username: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+      password: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
