@@ -131,6 +131,6 @@ jobs:
       version: ${{ needs.notify-discord-start.outputs.build_number }}
       type: ${{ inputs.promotion_type }}
     secrets:
-      webhook_url: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK_URL }}
-      username: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
-      password: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
+      PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK_URL }}
+      PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+      PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
