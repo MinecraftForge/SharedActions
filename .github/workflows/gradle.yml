@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: "publish"
+      gradle_setup:
+        description: |-
+          Commands to run before executing the gradle command
+        required: false
+        type: string
       artifact_group:
         description: "Maven group"
         required: false
@@ -53,9 +58,9 @@ on:
       PROMOTE_ARTIFACT_PASSWORD:
         required: true
       MAVEN_USER:
-        required: true
+        required: false
       MAVEN_PASSWORD:
-        required: true
+        required: false
 
 permissions:
   contents: read
@@ -84,15 +89,25 @@ jobs:
       - name: Setup Java ${{ inputs.java }}
         # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#java
         # language=bash
-        run: export JAVA_HOME=$(echo $JAVA_HOME_${{ inputs.java }}_X64)
-
-      - name: Gradle ${{ inputs.gradle_tasks }}
+        # We use this instead of the recommended `actions/setup-java` action because this is faster
+        run: |-
+          echo ::set-env name=JAVA_HOME::$(echo $JAVA_HOME_${{ inputs.java }}_X64)
+            
+      - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: ${{ inputs.gradle_tasks }}
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          gradle-version: wrapper
+      
+      - name: Set Maven Info
+        if: "${{ secrets.MAVEN_USER != '' }}"
+        run: |-
+          echo ::set-env name=MAVEN_USER::${{ secrets.MAVEN_USER }}
+          echo ::set-env name=MAVEN_PASSWORD::${{ secrets.MAVEN_PASSWORD }}
+      
+      - name: Gradle ${{ inputs.gradle_tasks }}
+        run: |-
+          ${{ inputs.gradle_setup }}
+          ./gradlew ${{ inputs.gradle_tasks }}
 
   notify-discord-end:
     name: Notify Discord (end)
@@ -131,6 +146,6 @@ jobs:
       version: ${{ needs.notify-discord-start.outputs.build_number }}
       type: ${{ inputs.promotion_type }}
     secrets:
-      PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK_URL }}
+      PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
       PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
       PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
