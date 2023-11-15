@@ -69,6 +69,10 @@ on:
         required: false
       SIGN_KEYSTORE_DATA:
         required: false
+      GRADLE_PUBLISH_KEY:
+        required: false
+      GRADLE_PUBLISH_SECRET:
+        required: false
 
 permissions:
   contents: read
@@ -128,6 +132,15 @@ jobs:
           echo "SIGN_KEYSTORE_PASSWORD=$SIGN_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
           echo "SIGN_KEYSTORE_DATA=$SIGN_KEYSTORE_DATA" >> "$GITHUB_ENV"
       
+      - name: Set Gradle Publish Info
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
+        if: ${{ env.GRADLE_PUBLISH_KEY != '' }
+        run: |-
+          echo "GRADLE_PUBLISH_KEY=$GRADLE_PUBLISH_KEY" >> "$GITHUB_ENV"
+          echo "GRADLE_PUBLISH_SECRET=$GRADLE_PUBLISH_SECRET" >> "$GITHUB_ENV"
+          
       - name: Gradle ${{ inputs.gradle_tasks }}
         run: |-
           ${{ inputs.gradle_setup }}
