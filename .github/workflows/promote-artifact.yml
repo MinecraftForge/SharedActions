@@ -58,7 +58,7 @@ jobs:
     steps:
       - name: Create JSON
         id: create-json
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         env:
           group: ${{ inputs.group }}
           artifact: ${{ inputs.artifact }}
