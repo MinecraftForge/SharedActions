@@ -50,13 +50,13 @@ on:
         default: "latest"
     secrets:
       DISCORD_WEBHOOK:
-        required: true
+        required: false
       PROMOTE_ARTIFACT_WEBHOOK:
-        required: true
+        required: false
       PROMOTE_ARTIFACT_USERNAME:
-        required: true
+        required: false
       PROMOTE_ARTIFACT_PASSWORD:
-        required: true
+        required: false
       MAVEN_USER:
         required: false
       MAVEN_PASSWORD:
