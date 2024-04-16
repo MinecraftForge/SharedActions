@@ -48,6 +48,12 @@ on:
         required: false
         type: string
         default: "latest"
+      submodules:
+        description: "Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules."
+        required: false
+        type: string
+        default: "false"
+        
     secrets:
       DISCORD_WEBHOOK:
         required: false
@@ -91,6 +97,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          submodules: ${{ inputs.submodules }}
           fetch-depth: 1000
           fetch-tags: true
 
