@@ -40,18 +40,3 @@ labelLocks:
 triage:
   teamName: "triage"
   projectId: 4
-labelTeams:
-  default:
-  - "TheCurle"
-  - "LexManos"
-  - "SizableShrimp"
-  Rendering: "rendering"
-  LTS: "legacy"
-commands:
-  prefixes:
-  - "/"
-  - "@autoforge "
-  - "@autoforge[bot] "
-  allowEdits: false
-  minimizeComment: true
-  reactToComment: true
