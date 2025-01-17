@@ -10,6 +10,10 @@ on:
         required: false
         type: string
         default: "???"
+      tag_prefix:
+        required: false
+        type: string
+        default: ""
       author_icon_url:
         required: false
         type: string
@@ -36,10 +40,17 @@ jobs:
         run: git fetch --tags
 
       - name: Get git commit description
+        env:
+          TAG_PREFIX: ${{ inputs.tag_prefix }}
         # language=bash
         run: |
-          echo "GIT_COMMIT_DESC=$(git describe --tags --long)" >> $GITHUB_ENV
-          echo "GIT_COMMIT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          if [ -n ${{ env.TAG_PREFIX }} ]; then
+            GIT_COMMIT_MATCH="--match \"${{ env.TAG_PREFIX }}-**\""
+          else
+            GIT_COMMIT_MATCH=""
+          fi
+          
+          echo "GIT_COMMIT_DESC=$(git describe --tags --long ${{ env.GIT_COMMIT_MATCH }})" >> $GITHUB_ENV
         if: inputs.build_number == '???'
 
       - name: Get build number
@@ -48,13 +59,13 @@ jobs:
         env:
           build_number: ${{ inputs.build_number }}
           commit_desc: ${{ env.GIT_COMMIT_DESC }}
-          commit_tag: ${{ env.GIT_COMMIT_TAG }}
+          tag_prefix: ${{ inputs.tag_prefix }}
         with:
           result-encoding: string
           # language=js
           script: |
             'use strict';
-            const { build_number, commit_desc, commit_tag } = process.env
+            const {build_number, commit_desc, tag_prefix} = process.env
             
             // if we have a build number, use it.
             if (build_number !== '???') return build_number
@@ -63,7 +74,8 @@ jobs:
             let buildNumber = '???'
             
             // split the description. assume tag-offset-sha.
-            const splitDesc = commit_desc.split('-', 2)
+            const prefixLength = tag_prefix.length !== 0 ? tag_prefix.length + 1 : 0
+            const splitDesc = commit_desc.substring(prefixLength).split('-', 2)
             
             // if the split desc has more than one -, it means it probably has the info we need
             if (splitDesc.length > 1) {
