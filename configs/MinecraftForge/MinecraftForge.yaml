@@ -15,7 +15,7 @@ labelLocks:
     message: |-
       :wave: We use the issue tracker exclusively for final bug reports and feature requests.
       However, this issue appears to be better suited for the [Forge Support Forums](https://forums.minecraftforge.net/) or [Forge Discord](https://discord.minecraftforge.net/).
-      Please create a new topic on the support forum with this issue or ask in the `#tech-support` channel in the Discord server, and the conversation can continue there.
+      Please create a new topic on the support forum with this issue or ask in the `#player-support` channel in the Discord server, and the conversation can continue there.
   Spam:
     lock: true
     lockReason: "spam"
@@ -36,8 +36,8 @@ labelLocks:
     message: |-
       :wave: We use the issue tracker exclusively for final bug reports and feature requests.
       However, this issue appears to be better suited for the [Forge Support Forums](https://forums.minecraftforge.net/) or [Forge Discord](https://discord.minecraftforge.net/).
-      Please create a new topic on the support forum with this issue or ask in the `#tech-support` channel in the Discord server, and the conversation can continue there.
-      Please note that since your issue is for an unsupported version, we cannot guarantee that it will be addressed.
+      Please create a new topic on the support forum with this issue or ask in the `#player-support` channel in the Discord server, and the conversation can continue there.
+      Please note that since your issue is for version that is not under active support, we cannot guarantee that it will be addressed.
 triage:
   teamName: "triage"
   projectId: 4
