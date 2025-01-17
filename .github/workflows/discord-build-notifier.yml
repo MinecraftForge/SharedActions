@@ -9,15 +9,19 @@ on:
       build_number:
         required: false
         type: string
-        default: "???"
-      tag_prefix:
+        default: ''
+      filter_folder:
         required: false
         type: string
-        default: ""
+        default: ''
+      filter_tag:
+        required: false
+        type: string
+        default: ''
       author_icon_url:
         required: false
         type: string
-        default: "https://avatars.githubusercontent.com/u/1390178"
+        default: 'https://avatars.githubusercontent.com/u/1390178'
     secrets:
       DISCORD_WEBHOOK:
         required: true
@@ -30,66 +34,81 @@ jobs:
     name: Notify Discord
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1000
           fetch-tags: true
-        if: inputs.build_number == '???'
+        if: inputs.build_number == ''
 
       - name: Work around actions/checkout#2041
         run: git fetch --tags
 
-      - name: Get git commit description
-        env:
-          TAG_PREFIX: ${{ inputs.tag_prefix }}
-        # language=bash
-        run: |
-          if [ -n ${{ env.TAG_PREFIX }} ]; then
-            GIT_COMMIT_MATCH="--match \"${{ env.TAG_PREFIX }}-**\""
-          else
-            GIT_COMMIT_MATCH=""
-          fi
-          
-          echo "GIT_COMMIT_DESC=$(git describe --tags --long ${{ env.GIT_COMMIT_MATCH }})" >> $GITHUB_ENV
-        if: inputs.build_number == '???'
-
       - name: Get build number
         id: get-build-number
-        uses: actions/github-script@v7
+        continue-on-error: true
         env:
-          build_number: ${{ inputs.build_number }}
-          commit_desc: ${{ env.GIT_COMMIT_DESC }}
-          tag_prefix: ${{ inputs.tag_prefix }}
-        with:
-          result-encoding: string
-          # language=js
-          script: |
-            'use strict';
-            const {build_number, commit_desc, tag_prefix} = process.env
-            
-            // if we have a build number, use it.
-            if (build_number !== '???') return build_number
-            
-            // initialise fallback build number
-            let buildNumber = '???'
-            
-            // split the description. assume tag-offset-sha.
-            const prefixLength = tag_prefix.length !== 0 ? tag_prefix.length + 1 : 0
-            const splitDesc = commit_desc.substring(prefixLength).split('-', 2)
-            
-            // if the split desc has more than one -, it means it probably has the info we need
-            if (splitDesc.length > 1) {
-                buildNumber = splitDesc[0] + '.' + splitDesc[1]
-            }
-            
-            return buildNumber;
+          ORIGINAL_BUILD_NUMBER: ${{ inputs.build_number }}
+          FOLDER: ${{ inputs.filter_folder }}
+          TAG_PREFIX: ${{ inputs.filter_tag }}
+        # language=bash
+        run: |
+          if [[ -n $ORIGINAL_BUILD_NUMBER ]]; then
+            echo "Re-using build number $ORIGINAL_BUILD_NUMBER"
+            echo "BUILD_NUMBER=$ORIGINAL_BUILD_NUMBER" >> $GITHUB_ENV
+            exit 0
+          fi
+          
+          FILTER_FOLDER=${{ env.FOLDER }}
+          FILTER_TAG=${{ env.TAG_PREFIX }}
+          
+          # If one is empty, set it to the other. Subprojects should always have filters.
+          if [[ -z $FILTER_TAG ]] && [[ -n $FILTER_FOLDER ]]; then
+            true # NO-OP, filters are assigned already
+          elif [[ -z $FILTER_TAG ]] && [[ -n $FILTER_FOLDER ]]; then
+            FILTER_TAG=$FILTER_FOLDER
+          elif [[ -z $FILTER_FOLDER ]] && [[ -n $FILTER_TAG ]] ; then
+            FILTER_FOLDER=$FILTER_TAG
+          else
+            # Use default . so we can subtitute it in rev-list without using an if-statement
+            FILTER_FOLDER=.
+          fi
+          
+          # Debug messages so we can see what the filters are at runtime
+          if [[ -n $FILTER_TAG ]]; then
+            echo "Filter Folder: $FILTER_FOLDER"
+            echo "Filter Tag:    $FILTER_TAG"
+            echo ""
+          fi
+          
+          # Get the latest tag based on the filter if any
+          if [[ -n $FILTER_TAG ]]; then
+            GIT_TAG=$(git describe --tags --abbrev=0 --match "$FILTER_TAG**")
+          else
+            GIT_TAG=$(git describe --tags --abbrev=0)
+          fi
+          
+          # Validate that we actually have a tag
+          if [[ -z $GIT_TAG ]]; then
+            echo "No tags found! Using unknown build number."
+            echo "BUILD_NUMBER=???" >> $GITHUB_ENV
+            exit 1
+          fi
+          
+          # Get the commit count since the tag (doesn't include tagged commit)
+          COMMIT_COUNT=$(git rev-list "$GIT_TAG"..HEAD --count -- "$FILTER_FOLDER")
+          
+          echo "Git Tag:       $GIT_TAG"
+          echo "Commits since: $COMMIT_COUNT"
+          
+          echo "BUILD_NUMBER=$GIT_TAG.$COMMIT_COUNT" >> $GITHUB_ENV
 
       - name: Create JSON embed for Discord
         id: create-json
         uses: actions/github-script@v7
         env:
           build_status: ${{ inputs.build_status }}
-          build_number: ${{ steps.get-build-number.outputs.result }}
+          build_number: ${{ env.BUILD_NUMBER }}
           ref_type: ${{ github.ref_type }}
           ref_name: ${{ github.ref_name }}
           author_icon_url: ${{ inputs.author_icon_url }}
@@ -160,4 +179,4 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
     outputs:
-      build_number: ${{ steps.get-build-number.outputs.result }}
+      build_number: ${{ env.BUILD_NUMBER }}
