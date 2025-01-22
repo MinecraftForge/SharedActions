@@ -3,6 +3,14 @@ name: Gradle CI
 on:
   workflow_call:
     inputs:
+      subproject:
+        description: "The subproject to build"
+        required: false
+        type: string
+      tag_prefix:
+        description: "The tag prefix to filter by"
+        required: false
+        type: string
       java:
         description: "The version of Java to use to run Gradle" # Note: Gradle's Java toolchains feature is used for compiling, which is separate from this
         required: false
@@ -89,6 +97,8 @@ jobs:
     uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
       build_status: started
+      filter_folder: ${{ inputs.subproject }}
+      filter_tag: ${{ inputs.tag_prefix }}
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
