@@ -79,6 +79,10 @@ jobs:
             echo "Filter Folder: $FILTER_FOLDER"
             echo "Filter Tag:    $FILTER_TAG"
             echo ""
+          
+            if [[ $FILTER_TAG != *- ]]; then
+              FILTER_TAG="${FILTER_TAG}-"
+            fi
           fi
           
           # Get the latest tag based on the filter if any
@@ -101,7 +105,7 @@ jobs:
           echo "Git Tag:       $GIT_TAG"
           echo "Commits since: $COMMIT_COUNT"
           
-          echo "BUILD_NUMBER=$GIT_TAG.$COMMIT_COUNT" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${GIT_TAG:${#FILTER_TAG}}.$COMMIT_COUNT" >> $GITHUB_ENV
 
       - name: Create JSON embed for Discord
         id: create-json
