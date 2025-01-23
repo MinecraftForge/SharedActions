@@ -53,6 +53,10 @@ jobs:
           TAG_PREFIX: ${{ inputs.filter_tag }}
         # language=bash
         run: |
+          # GitHub Actions runs bash with '-e' by default, so we need to disable it for this script
+          # Failures in command substitutions are handled properly and should not fail the entire script
+          set +e
+          
           if [[ -n $ORIGINAL_BUILD_NUMBER ]]; then
             echo "Re-using build number $ORIGINAL_BUILD_NUMBER"
             echo "BUILD_NUMBER=$ORIGINAL_BUILD_NUMBER" >> $GITHUB_ENV
