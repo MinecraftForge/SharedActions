@@ -32,6 +32,9 @@ jobs:
           fetch-tags: true
         if: inputs.build_number == '???'
 
+      - name: Work around actions/checkout#2041
+        run: git fetch --tags
+
       - name: Get git commit description
         # language=bash
         run: |
