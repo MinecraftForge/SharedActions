@@ -101,6 +101,9 @@ jobs:
           fetch-depth: 1000
           fetch-tags: true
 
+      - name: Work around actions/checkout#2041
+        run: git fetch --tags
+
       - name: Make Gradle executable
         # language=bash
         run: chmod +x ./gradlew
