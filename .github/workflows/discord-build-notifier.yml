@@ -93,7 +93,7 @@ jobs:
           if [[ -n $FILTER_TAG ]]; then
             GIT_TAG=$(git describe --tags --abbrev=0 --match "$FILTER_TAG**")
           else
-            GIT_TAG=$(git describe --tags --abbrev=0)
+            GIT_TAG=$(git describe --tags --abbrev=0 --exclude "*-*")
           fi
           
           # Validate that we actually have a tag
