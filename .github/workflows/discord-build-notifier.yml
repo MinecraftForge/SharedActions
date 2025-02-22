@@ -98,13 +98,20 @@ jobs:
           
           # Validate that we actually have a tag
           if [[ -z $GIT_TAG ]]; then
-            echo "No tags found! Using unknown build number."
+            echo "No tags found! Refusing to build."
             echo "BUILD_NUMBER=???" >> $GITHUB_ENV
             exit 1
           fi
           
           # Get the commit count since the tag (doesn't include tagged commit)
           COMMIT_COUNT=$(git rev-list "$GIT_TAG"..HEAD --count -- "$FILTER_FOLDER")
+          
+          # Validate that we actually have a commit count
+          if [[ -z COMMIT_COUNT ]]; then
+            echo "Failed to get commit count! Refusing to build."
+            echo "BUILD_NUMBER=???" >> $GITHUB_ENV
+            exit 1
+          fi
           
           echo "Git Tag:       $GIT_TAG"
           echo "Commits since: $COMMIT_COUNT"
@@ -128,7 +135,7 @@ jobs:
             const capitalise = (str) => str.charAt(0).toUpperCase() + str.slice(1)
             const { build_status, build_number, ref_type, ref_name, author_icon_url } = process.env
             
-            const title = capitalise(build_status)
+            const title = build_number !== '???' ? capitalise(build_status) : 'Failure'
             let colour
             switch (title) {
                 case 'Success':
@@ -159,11 +166,14 @@ jobs:
                 }]
             }
             
-            json.embeds[0].fields.push({
-                name: 'Build number',
-                value: build_number,
-                inline: true
-            })
+            // If we don't have a build number, don't add it
+            if (build_number !== '???') {
+                json.embeds[0].fields.push({
+                    name: 'Build number',
+                    value: build_number,
+                    inline: true
+                })
+            }
             
             json.embeds[0].fields.push({
                 name: `Build ${ref_type}`,
@@ -176,6 +186,15 @@ jobs:
                     name: 'Commit message',
                     value: `${context.payload.head_commit.message}`.replaceAll("'", "\\'")
                 })
+            } else if (title === 'Failure') {
+                let error = ''
+                if (build_number === '???') {
+                    error = 'Failed to get build number'
+                }
+                json.embeds[0].fields.push({
+                    name: 'Error',
+                    value: error
+                })
             }
             
             return JSON.stringify(json)
@@ -186,5 +205,9 @@ jobs:
           curl --http2-prior-knowledge --tlsv1.3 --false-start --tcp-fastopen --compressed -sS -m 10 -H "Content-Type: application/json" --request POST -d '${{ steps.create-json.outputs.result }}' ${{ env.DISCORD_WEBHOOK }}
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Fail on missing build number
+        if: ${{ env.BUILD_NUMBER == '???' }}
+        run: exit 1
     outputs:
       build_number: ${{ env.BUILD_NUMBER }}

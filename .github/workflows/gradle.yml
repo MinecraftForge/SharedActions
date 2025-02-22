@@ -93,7 +93,7 @@ permissions:
 
 jobs:
   notify-discord-start:
-    name: Notify Discord (start)
+    name: Validate Build Number
     uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
       build_status: started
@@ -104,6 +104,7 @@ jobs:
 
   gradle:
     runs-on: ubuntu-latest
+    needs: "notify-discord-start"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -167,8 +168,8 @@ jobs:
           ./gradlew ${{ inputs.gradle_tasks }}
 
   notify-discord-end:
-    name: Notify Discord (end)
-    needs: [ "notify-discord-start", "gradle" ]
+    name: Notify Discord
+    needs: "gradle"
     if: ${{ always() }}
     uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
@@ -179,7 +180,7 @@ jobs:
 
   promote-artifact:
     name: Promote artifact
-    needs: [ "notify-discord-start", "gradle" ]
+    needs: "gradle"
     if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote' && inputs.artifact_names == ''
     uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
     with:
@@ -194,7 +195,7 @@ jobs:
 
   promote-artifacts:
     name: Promote artifacts
-    needs: [ "notify-discord-start", "gradle" ]
+    needs: "gradle"
     if: needs.gradle.result == 'success' && inputs.artifact_name == 'dont promote' && inputs.artifact_names != ''
     uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@main
     with:
