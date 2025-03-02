@@ -1,0 +1,53 @@
+name: Get Version
+
+on:
+  workflow_call:
+    inputs:
+      submodules:
+        description: 'Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules.'
+        required: false
+        type: string
+        default: 'false'
+    outputs:
+      build_number:
+        value: ${{ jobs.get-version.outputs.build_number }}
+
+permissions:
+  contents: read
+
+jobs:
+  get-version:
+    name: Get Version
+    runs-on: ubuntu-latest
+    outputs:
+      build_number: ${{ steps.git-version.outputs.GIT_VERSION }}
+    steps:
+      - name: Checkout Repository
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: ${{ inputs.submodules }}
+          fetch-depth: 1000
+          fetch-tags: true
+
+      - name: Work around actions/checkout#2041
+        id: checkout-tags
+        # language=bash
+        run: git fetch --tags
+
+      - name: Setup Java 17
+        id: setup-java
+        # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#java
+        # We use this instead of the recommended `actions/setup-java` action because this is faster
+        # language=bash
+        run: echo "JAVA_HOME=$(echo $JAVA_HOME_17_X64)" >> "$GITHUB_ENV"
+
+      - name: Download GitVersion
+        id: git-version-download
+        # language=bash
+        run: wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/0.1.0/git-version-0.1.0-fatjar.jar' -o ${{ runner.temp }}/git-version.jar
+
+      - name: Get Version using GitVersion
+        id: git-version
+        # language=bash
+        run: echo "GIT_VERSION=$(java -jar ${{ runner.temp }}/git-version.jar)" >> $GITHUB_ENV

@@ -4,22 +4,22 @@ on:
   workflow_call:
     inputs:
       groups:
-        description: "Maven groups CSV. If only one group is specified, it will be used for all artifacts."
+        description: 'Maven groups CSV. If only one group is specified, it will be used for all artifacts.'
         required: true
         type: string
       artifacts:
-        description: "Maven artifacts CSV"
+        description: 'Maven artifacts CSV'
         required: true
         type: string
       version:
-        description: "Maven version"
+        description: 'Maven version'
         required: true
         type: string
       type:
-        description: "Promotion type"
+        description: 'Promotion type'
         required: false
         type: string
-        default: "latest"
+        default: 'latest'
     secrets:
       PROMOTE_ARTIFACT_WEBHOOK:
         required: true
@@ -31,25 +31,25 @@ on:
   workflow_dispatch:
     inputs:
       groups:
-        description: "Maven groups CSV. If only one group is specified, it will be used for all artifacts."
+        description: 'Maven groups CSV. If only one group is specified, it will be used for all artifacts.'
         required: true
         type: string
       artifacts:
-        description: "Maven artifacts CSV"
+        description: 'Maven artifacts CSV'
         required: true
         type: string
       version:
-        description: "Maven version"
+        description: 'Maven version'
         required: true
         type: string
       type:
-        description: "Promotion type"
+        description: 'Promotion type'
         required: false
         type: choice
-        default: "latest"
+        default: 'latest'
         options:
-          - "latest"
-          - "recommended"
+          - 'latest'
+          - 'recommended'
 
 jobs:
   promote-artifact:

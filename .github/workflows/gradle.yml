@@ -4,56 +4,56 @@ on:
   workflow_call:
     inputs:
       java:
-        description: "The version of Java to use to run Gradle" # Note: Gradle's Java toolchains feature is used for compiling, which is separate from this
+        description: 'The version of Java to use to run Gradle' # Note: Gradle's Java toolchains feature is used for compiling, which is separate from this
         required: false
         type: string
-        default: "17"
+        default: '17'
       gradle_tasks:
-        description: "The Gradle tasks to run"
+        description: 'The Gradle tasks to run'
         required: false
         type: string
-        default: "publish"
+        default: 'publish'
       gradle_setup:
         description: |-
           Commands to run before executing the gradle command
         required: false
         type: string
       artifact_group:
-        description: "Maven group"
+        description: 'Maven group'
         required: false
         type: string
-        default: "net.minecraftforge"
+        default: 'net.minecraftforge'
       artifact_name:
-        description: "Maven artifact"
+        description: 'Maven artifact'
         required: false
         type: string
-        default: "dont promote"
+        default: 'dont promote'
       artifact_groups:
-        description: "Maven groups CSV for multi-promotion. If only one group is specified, it will be used for all artifacts."
+        description: 'Maven groups CSV for multi-promotion. If only one group is specified, it will be used for all artifacts.'
         required: false
         type: string
-        default: "net.minecraftforge"
+        default: 'net.minecraftforge'
       artifact_names:
-        description: "Maven artifacts CSV for multi-promotion"
+        description: 'Maven artifacts CSV for multi-promotion'
         required: false
         type: string
-        default: ""
+        default: ''
       artifact_version:
-        description: "Maven version"
+        description: 'Maven version'
         required: false
         type: string
-        default: "???"
+        default: '???'
       promotion_type:
-        description: "Promotion type"
+        description: 'Promotion type'
         required: false
         type: string
-        default: "latest"
+        default: 'latest'
       submodules:
-        description: "Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules."
+        description: 'Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules.'
         required: false
         type: string
-        default: "false"
-        
+        default: 'false'
+
     secrets:
       DISCORD_WEBHOOK:
         required: false
@@ -84,98 +84,118 @@ permissions:
   contents: read
 
 jobs:
+  git-version:
+    name: Project Version
+    uses: MinecraftForge/SharedActions/.github/workflows/git-version.yml@main
+    with:
+      submodules: ${{ inputs.submodules }}
+
   notify-discord-start:
     name: Notify Discord (start)
+    needs: [ 'git-version' ]
     uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
       build_status: started
+      build_number: ${{ needs.git-version.outputs.build_number }}
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
   gradle:
+    name: Run Gradle
+    needs: [ 'git-version' ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        id: checkout
+        uses: actions/checkout@v4
         with:
           submodules: ${{ inputs.submodules }}
           fetch-depth: 1000
           fetch-tags: true
 
       - name: Work around actions/checkout#2041
+        id: checkout-tags
+        # language=bash
         run: git fetch --tags
 
-      - name: Make Gradle executable
+      - name: Setup Java ${{ inputs.java }}
+        id: setup-java
+        # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#java
+        # We use this instead of the recommended `actions/setup-java` action because this is faster
+        # language=bash
+        run: |-
+          echo "JAVA_HOME=$(echo $JAVA_HOME_${{ inputs.java }}_X64)" >> "$GITHUB_ENV"
+
+      - name: Setup Gradle Wrapper
+        id: setup-gradlew
         # language=bash
         run: chmod +x ./gradlew
 
-      - name: Setup Java ${{ inputs.java }}
-        # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#java
-        # language=bash
-        # We use this instead of the recommended `actions/setup-java` action because this is faster
-        run: |-
-          echo "JAVA_HOME=$(echo $JAVA_HOME_${{ inputs.java }}_X64)" >> "$GITHUB_ENV"
-            
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: wrapper
-      
+
       - name: Set Maven Info
-        env: 
+        env:
           MAVEN_USER: ${{ secrets.MAVEN_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
         if: ${{ env.MAVEN_USER != '' }}
+        # language=bash
         run: |-
           echo "MAVEN_USER=$MAVEN_USER" >> "$GITHUB_ENV"
           echo "MAVEN_PASSWORD=$MAVEN_PASSWORD" >> "$GITHUB_ENV"
-          
+
       - name: Set Signing Info
-        env: 
+        env:
           SIGN_KEY_ALIAS: ${{ secrets.SIGN_KEY_ALIAS }}
           SIGN_KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
           SIGN_KEYSTORE_PASSWORD: ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
           SIGN_KEYSTORE_DATA: ${{ secrets.SIGN_KEYSTORE_DATA }}
         if: ${{ env.SIGN_KEY_ALIAS != '' }}
+        # language=bash
         run: |-
           echo "SIGN_KEY_ALIAS=$SIGN_KEY_ALIAS" >> "$GITHUB_ENV"
           echo "SIGN_KEY_PASSWORD=$SIGN_KEY_PASSWORD" >> "$GITHUB_ENV"
           echo "SIGN_KEYSTORE_PASSWORD=$SIGN_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
           echo "SIGN_KEYSTORE_DATA=$SIGN_KEYSTORE_DATA" >> "$GITHUB_ENV"
-      
+
       - name: Set Gradle Publish Info
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
         if: ${{ env.GRADLE_PUBLISH_KEY != '' }}
+        # language=bash
         run: |-
           echo "GRADLE_PUBLISH_KEY=$GRADLE_PUBLISH_KEY" >> "$GITHUB_ENV"
           echo "GRADLE_PUBLISH_SECRET=$GRADLE_PUBLISH_SECRET" >> "$GITHUB_ENV"
-          
+
       - name: Gradle ${{ inputs.gradle_tasks }}
+        # language=bash
         run: |-
           ${{ inputs.gradle_setup }}
           ./gradlew ${{ inputs.gradle_tasks }}
 
   notify-discord-end:
     name: Notify Discord (end)
-    needs: [ "notify-discord-start", "gradle" ]
+    needs: [ 'git-version', 'gradle' ]
     if: ${{ always() }}
     uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
       build_status: ${{ needs.gradle.result }}
-      build_number: ${{ needs.notify-discord-start.outputs.build_number }}
+      build_number: ${{ needs.git-version.outputs.build_number }}
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
   promote-artifact:
     name: Promote artifact
-    needs: [ "notify-discord-start", "gradle" ]
+    needs: [ 'git-version', 'gradle' ]
     if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote' && inputs.artifact_names == ''
     uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
     with:
       group: ${{ inputs.artifact_group }}
       artifact: ${{ inputs.artifact_name }}
-      version: ${{ needs.notify-discord-start.outputs.build_number }}
+      version: ${{ needs.git-version.outputs.build_number }}
       type: ${{ inputs.promotion_type }}
     secrets:
       PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
@@ -184,13 +204,13 @@ jobs:
 
   promote-artifacts:
     name: Promote artifacts
-    needs: [ "notify-discord-start", "gradle" ]
+    needs: [ 'git-version', 'gradle' ]
     if: needs.gradle.result == 'success' && inputs.artifact_name == 'dont promote' && inputs.artifact_names != ''
     uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@main
     with:
       groups: ${{ inputs.artifact_groups }}
       artifacts: ${{ inputs.artifact_names }}
-      version: ${{ needs.notify-discord-start.outputs.build_number }}
+      version: ${{ needs.git-version.outputs.build_number }}
       type: ${{ inputs.promotion_type }}
     secrets:
       PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}

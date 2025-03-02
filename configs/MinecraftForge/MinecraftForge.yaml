@@ -1,12 +1,12 @@
 labels:
-  feature: "Feature"
-  needs_rebase: "Needs Rebase"
-  lts: "LTS"
-  rendering: "Rendering"
-  assigned: "Assigned"
-  new_event: "New Event"
-  triage: "Triage"
-  latest: "1.20"
+  feature: 'Feature'
+  needs_rebase: 'Needs Rebase'
+  lts: 'LTS'
+  rendering: 'Rendering'
+  assigned: 'Assigned'
+  new_event: 'New Event'
+  triage: 'Triage'
+  latest: '1.20'
 labelLocks:
   Forum:
     lock: true
@@ -18,7 +18,7 @@ labelLocks:
       Please create a new topic on the support forum with this issue or ask in the `#player-support` channel in the Discord server, and the conversation can continue there.
   Spam:
     lock: true
-    lockReason: "spam"
+    lockReason: 'spam'
     close: true
     message: null
   Trivial:
@@ -29,7 +29,7 @@ labelLocks:
       :wave: Thank you for your contribution.
       Unfortunately, we do not accept low effort PRs, be it typo fixes or trivial code formatting changes.
       For inspiration or ideas, you can take a look at the open [issues](https://github.com/MinecraftForge/MinecraftForge/issues), or join our [Discord server](https://discord.minecraftforge.net/).
-  "EOL Forum":
+  'EOL Forum':
     lock: true
     lockReason: null
     close: true
@@ -39,5 +39,5 @@ labelLocks:
       Please create a new topic on the support forum with this issue or ask in the `#player-support` channel in the Discord server, and the conversation can continue there.
       Please note that since your issue is for version that is not under active support, we cannot guarantee that it will be addressed.
 triage:
-  teamName: "triage"
+  teamName: 'triage'
   projectId: 4
