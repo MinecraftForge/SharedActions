@@ -4,22 +4,22 @@ on:
   workflow_call:
     inputs:
       group:
-        description: "Maven group"
+        description: 'Maven group'
         required: true
         type: string
       artifact:
-        description: "Maven artifact"
+        description: 'Maven artifact'
         required: true
         type: string
       version:
-        description: "Maven version"
+        description: 'Maven version'
         required: true
         type: string
       type:
-        description: "Promotion type"
+        description: 'Promotion type'
         required: false
         type: string
-        default: "latest"
+        default: 'latest'
     secrets:
       PROMOTE_ARTIFACT_WEBHOOK:
         required: true
@@ -31,25 +31,25 @@ on:
   workflow_dispatch:
     inputs:
       group:
-        description: "Maven group"
+        description: 'Maven group'
         required: true
         type: string
       artifact:
-        description: "Maven artifact"
+        description: 'Maven artifact'
         required: true
         type: string
       version:
-        description: "Maven version"
+        description: 'Maven version'
         required: true
         type: string
       type:
-        description: "Promotion type"
+        description: 'Promotion type'
         required: false
         type: choice
-        default: "latest"
+        default: 'latest'
         options:
-          - "latest"
-          - "recommended"
+          - 'latest'
+          - 'recommended'
 
 jobs:
   promote-artifact:

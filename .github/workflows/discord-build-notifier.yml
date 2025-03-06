@@ -7,78 +7,27 @@ on:
         required: true
         type: string
       build_number:
-        required: false
+        required: true
         type: string
-        default: "???"
       author_icon_url:
         required: false
         type: string
-        default: "https://avatars.githubusercontent.com/u/1390178"
+        default: 'https://avatars.githubusercontent.com/u/1390178'
     secrets:
       DISCORD_WEBHOOK:
         required: true
-    outputs:
-      build_number:
-        value: ${{ jobs.notify-discord.outputs.build_number }}
 
 jobs:
   notify-discord:
     name: Notify Discord
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1000
-          fetch-tags: true
-        if: inputs.build_number == '???'
-
-      - name: Work around actions/checkout#2041
-        run: git fetch --tags
-        if: inputs.build_number == '???'
-
-      - name: Get git commit description
-        # language=bash
-        run: |
-          echo "GIT_COMMIT_DESC=$(git describe --tags --long)" >> $GITHUB_ENV
-          echo "GIT_COMMIT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-        if: inputs.build_number == '???'
-
-      - name: Get build number
-        id: get-build-number
-        uses: actions/github-script@v7
-        env:
-          build_number: ${{ inputs.build_number }}
-          commit_desc: ${{ env.GIT_COMMIT_DESC }}
-          commit_tag: ${{ env.GIT_COMMIT_TAG }}
-        with:
-          result-encoding: string
-          # language=js
-          script: |
-            'use strict';
-            const { build_number, commit_desc, commit_tag } = process.env
-            
-            // if we have a build number, use it.
-            if (build_number !== '???') return build_number
-            
-            // initialise fallback build number
-            let buildNumber = '???'
-            
-            // split the description. assume tag-offset-sha.
-            const splitDesc = commit_desc.split('-', 2)
-            
-            // if the split desc has more than one -, it means it probably has the info we need
-            if (splitDesc.length > 1) {
-                buildNumber = splitDesc[0] + '.' + splitDesc[1]
-            }
-            
-            return buildNumber;
-
       - name: Create JSON embed for Discord
         id: create-json
         uses: actions/github-script@v7
         env:
           build_status: ${{ inputs.build_status }}
-          build_number: ${{ steps.get-build-number.outputs.result }}
+          build_number: ${{ inputs.build_number }}
           ref_type: ${{ github.ref_type }}
           ref_name: ${{ github.ref_name }}
           author_icon_url: ${{ inputs.author_icon_url }}
