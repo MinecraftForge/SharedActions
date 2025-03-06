@@ -3,6 +3,11 @@ name: Get Version
 on:
   workflow_call:
     inputs:
+      version:
+        description: 'The version of GitVersion to use'
+        required: false
+        type: string
+        default: '0.1.2'
       submodules:
         description: 'Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules.'
         required: false
@@ -45,7 +50,7 @@ jobs:
       - name: Download GitVersion
         id: git-version-download
         # language=bash
-        run: wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/0.1.0/git-version-0.1.0-fatjar.jar' -o ${{ runner.temp }}/git-version.jar
+        run: wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/${{ inputs.version }}/git-version-${{ inputs.version }}-fatjar.jar' -o ${{ runner.temp }}/git-version.jar
 
       - name: Get Version using GitVersion
         id: git-version
