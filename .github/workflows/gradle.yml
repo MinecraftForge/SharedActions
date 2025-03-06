@@ -86,14 +86,14 @@ permissions:
 jobs:
   git-version:
     name: Project Version
-    uses: MinecraftForge/SharedActions/.github/workflows/git-version.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/git-version.yml@v0
     with:
       submodules: ${{ inputs.submodules }}
 
   notify-discord-start:
     name: Notify Discord (start)
     needs: [ 'git-version' ]
-    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@v0
     with:
       build_status: started
       build_number: ${{ needs.git-version.outputs.build_number }}
@@ -180,7 +180,7 @@ jobs:
     name: Notify Discord (end)
     needs: [ 'git-version', 'gradle' ]
     if: ${{ always() }}
-    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@v0
     with:
       build_status: ${{ needs.gradle.result }}
       build_number: ${{ needs.git-version.outputs.build_number }}
@@ -191,7 +191,7 @@ jobs:
     name: Promote artifact
     needs: [ 'git-version', 'gradle' ]
     if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote' && inputs.artifact_names == ''
-    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@v0
     with:
       group: ${{ inputs.artifact_group }}
       artifact: ${{ inputs.artifact_name }}
@@ -206,7 +206,7 @@ jobs:
     name: Promote artifacts
     needs: [ 'git-version', 'gradle' ]
     if: needs.gradle.result == 'success' && inputs.artifact_name == 'dont promote' && inputs.artifact_names != ''
-    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@main
+    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@v0
     with:
       groups: ${{ inputs.artifact_groups }}
       artifacts: ${{ inputs.artifact_names }}
