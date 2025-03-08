@@ -136,7 +136,7 @@ jobs:
             if (title === 'Started') {
                 json.embeds[0].fields.push({
                     name: 'Commit message',
-                    value: `${context.payload.head_commit.message}`.replaceAll("'", "\\'")
+                    value: `${context.payload.head_commit.message}`.replaceAll("'", "’")
                 })
             }
             
