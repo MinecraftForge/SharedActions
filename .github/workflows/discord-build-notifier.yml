@@ -1,4 +1,4 @@
-name: Notify Discord about build status
+name: Discord Build Notification
 
 on:
   workflow_call:
@@ -22,7 +22,7 @@ jobs:
     name: Notify Discord
     runs-on: ubuntu-latest
     steps:
-      - name: Create JSON embed for Discord
+      - name: Create Discord embed JSON
         id: create-json
         uses: actions/github-script@v7
         env:
@@ -92,6 +92,7 @@ jobs:
             return JSON.stringify(json)
 
       - name: Send notification
+        id: send-notification
         # language=bash
         run: |
           curl --http2-prior-knowledge --tlsv1.3 --false-start --tcp-fastopen --compressed -sS -m 10 -H "Content-Type: application/json" --request POST -d '${{ steps.create-json.outputs.result }}' ${{ env.DISCORD_WEBHOOK }}

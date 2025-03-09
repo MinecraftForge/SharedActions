@@ -1,4 +1,4 @@
-name: Get Version
+name: Git Version
 
 on:
   workflow_call:
@@ -8,6 +8,11 @@ on:
         required: false
         type: string
         default: '0.1.2'
+      project_path:
+        description: 'The path to the project to build. Used for Git Version.'
+        required: false
+        type: string
+        default: '.'
       submodules:
         description: 'Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules.'
         required: false
@@ -55,4 +60,4 @@ jobs:
       - name: Get Version using GitVersion
         id: git-version
         # language=bash
-        run: echo "GIT_VERSION=$(java -jar ${{ runner.temp }}/git-version.jar)" >> $GITHUB_ENV
+        run: echo "GIT_VERSION=$(java -jar ${{ runner.temp }}/git-version.jar --project-dir ${{ inputs.project_path }})" >> $GITHUB_ENV

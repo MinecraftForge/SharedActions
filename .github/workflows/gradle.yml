@@ -3,6 +3,11 @@ name: Gradle CI
 on:
   workflow_call:
     inputs:
+      project_path:
+        description: 'The path to the project to build. Used for Git Version.'
+        required: false
+        type: string
+        default: '.'
       java:
         description: 'The version of Java to use to run Gradle' # Note: Gradle's Java toolchains feature is used for compiling, which is separate from this
         required: false
@@ -14,8 +19,7 @@ on:
         type: string
         default: 'publish'
       gradle_setup:
-        description: |-
-          Commands to run before executing the gradle command
+        description: 'Commands to run before executing the gradle command'
         required: false
         type: string
       artifact_group:
@@ -85,9 +89,10 @@ permissions:
 
 jobs:
   git-version:
-    name: Project Version
+    name: Calculate Project Version
     uses: MinecraftForge/SharedActions/.github/workflows/git-version.yml@v0
     with:
+      project_path: ${{ inputs.project_path }}
       submodules: ${{ inputs.submodules }}
 
   notify-discord-start:
