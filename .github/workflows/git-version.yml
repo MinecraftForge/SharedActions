@@ -7,7 +7,7 @@ on:
         description: 'The version of GitVersion to use'
         required: false
         type: string
-        default: '0.2.9'
+        default: '0.2.12'
       project_path:
         description: 'The path to the project to build. Used for Git Version.'
         required: false
@@ -20,14 +20,14 @@ on:
         default: 'false'
     outputs:
       build_number:
-        value: ${{ jobs.get-version.outputs.build_number }}
+        value: ${{ jobs.git-version.outputs.build_number }}
 
 permissions:
   contents: read
 
 jobs:
-  get-version:
-    name: Get Version
+  git-version:
+    name: Git Version
     runs-on: ubuntu-latest
     outputs:
       build_number: ${{ steps.git-version.outputs.GIT_VERSION }}
@@ -52,15 +52,33 @@ jobs:
         # language=bash
         run: echo "JAVA_HOME=$(echo $JAVA_HOME_17_X64)" >> "$GITHUB_ENV"
 
-      - name: Get Version using GitVersion
+      - name: Cache Git Version
+        id: git-version-cache
+        uses: actions/cache@v4
+        with:
+          key: git-version-${{ inputs.version }}
+          path: git-version.jar
+
+      - name: Download Git Version
+        id: git-version-download
+        if: steps.git-version-cache.outputs.cache-hit != 'true'
+        shell: bash
+        # language=bash
+        run: wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/${{ inputs.version }}/git-version-${{ inputs.version }}-fatjar.jar' -O git-version.jar
+
+      - name: Run Git Version
         id: git-version
+        shell: bash
         # language=bash
         run: |-
-          wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/${{ inputs.version }}/git-version-${{ inputs.version }}-fatjar.jar' -o ${{ runner.temp }}/git-version.jar
-          GIT_VERSION=$(java -jar ${{ runner.temp }}/git-version.jar --project-dir ${{ inputs.project_path }})
-          if [[ $? -eq 0 ]] && [[ -z $GIT_VERSION ]]; then
+          # Get the version number from Git Version
+          GIT_VERSION=$(java -jar git-version.jar --project-dir ${{ inputs.project_path }})
+          
+          # If the command failed or there is no version number, stop now
+          if [[ $? -ne 0 ]] || [[ -z $GIT_VERSION ]]; then
             echo "Failed to get version number! Refusing to build."
             exit 1
           fi
           
-          echo "GIT_VERSION=$GIT_VERSION" >> $GITHUB_ENV
+          echo "Version: $GIT_VERSION"
+          echo "GIT_VERSION=$GIT_VERSION" >> $GITHUB_OUTPUT

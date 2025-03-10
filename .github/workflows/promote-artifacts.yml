@@ -3,20 +3,27 @@ name: Promote artifacts
 on:
   workflow_call:
     inputs:
-      groups:
-        description: 'Maven groups CSV. If only one group is specified, it will be used for all artifacts.'
+      group:
+        description: |
+          The maven group for the artifact to promote. You can promote multiple artifacts by specifying multiple groups and artifacts (separated by ',').
+          If there is only one group defined, it will be used for all artifacts. They are used in the same order as the artifacts.
+          Subprojects with unique version numbers should be promoted separately with their own build action.
         required: true
         type: string
-      artifacts:
-        description: 'Maven artifacts CSV'
+      artifact:
+        description: |
+          The maven artifact name to promote. You can promote multiple artifacts by specifying multiple groups and artifacts (separated by ',').
+          Subprojects with unique version numbers should be promoted separately with their own build action.
         required: true
         type: string
       version:
-        description: 'Maven version'
+        description: |
+          The version of the maven artifact to promote.
         required: true
         type: string
       type:
-        description: 'Promotion type'
+        description: |
+          The promotion type for the maven artifact. This reflects how it is viewed in the Files site.
         required: false
         type: string
         default: 'latest'
@@ -30,20 +37,27 @@ on:
 
   workflow_dispatch:
     inputs:
-      groups:
-        description: 'Maven groups CSV. If only one group is specified, it will be used for all artifacts.'
+      group:
+        description: |
+          The maven group for the artifact to promote. You can promote multiple artifacts by specifying multiple groups and artifacts (separated by ',').
+          If there is only one group defined, it will be used for all artifacts. They are used in the same order as the artifacts.
+          Subprojects with unique version numbers should be promoted separately with their own build action.
         required: true
         type: string
-      artifacts:
-        description: 'Maven artifacts CSV'
+      artifact:
+        description: |
+          The maven artifact name to promote. You can promote multiple artifacts by specifying multiple groups and artifacts (separated by ',').
+          Subprojects with unique version numbers should be promoted separately with their own build action.
         required: true
         type: string
       version:
-        description: 'Maven version'
+        description: |
+          The version of the maven artifact to promote.
         required: true
         type: string
       type:
-        description: 'Promotion type'
+        description: |
+          The promotion type for the maven artifact. This reflects how it is viewed in the Files site.
         required: false
         type: choice
         default: 'latest'
@@ -52,27 +66,30 @@ on:
           - 'recommended'
 
 jobs:
-  promote-artifact:
-    name: Promote artifact
+  promote-artifacts:
+    name: Promote artifact${{ contains( inputs.artifact, ',' ) == 'true' && 's' || '' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Create JSONs
-        id: create-jsons
+      - name: Promote artifact${{ contains( inputs.artifact, ',' ) == 'true' && 's' || '' }}
+        id: promote-artifacts
         uses: actions/github-script@v7
         env:
-          groups: ${{ inputs.groups }}
-          artifacts: ${{ inputs.artifacts }}
+          group: ${{ inputs.group }}
+          artifact: ${{ inputs.artifact }}
           version: ${{ inputs.version }}
           type: ${{ inputs.type }}
+          PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
+          PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+          PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
         with:
           result-encoding: string
           # language=js
           script: |
             'use strict';
             const { version, type } = process.env
-            let { groups, artifacts } = process.env
-            groups = groups.split(',')
-            artifacts = artifacts.split(',')
+            const { group, artifact } = process.env
+            const groups = group.split(',')
+            const artifacts = artifact.split(',')
             
             /** @type string[] */
             const jsons = []
@@ -85,32 +102,18 @@ jobs:
               }))
             }
             
-            return jsons.join('UwU')
-
-      - name: Notify webhook
-        uses: actions/github-script@v7
-        env:
-          jsons: ${{ steps.create-jsons.outputs.result }}
-          PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
-          PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
-          PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
-        with:
-          # language=js
-          script: |
-            'use strict';
-            /** @type {{exec: (command: string, args?: string[]) => Promise<number>}} */
-            const actionsExec = require('@actions/exec');
-            const { jsons, PROMOTE_ARTIFACT_WEBHOOK, PROMOTE_ARTIFACT_USERNAME, PROMOTE_ARTIFACT_PASSWORD } = process.env
+            const { PROMOTE_ARTIFACT_WEBHOOK, PROMOTE_ARTIFACT_USERNAME, PROMOTE_ARTIFACT_PASSWORD } = process.env
             
             /** @type string[] */
-            const jsonsList = jsons.split('UwU')
-            for (const json of jsonsList) {
-              await actionsExec.exec('curl', [
-                '--tlsv1.3', '--compressed', '-sS', '-m', '10',
-                '-u', `${PROMOTE_ARTIFACT_USERNAME}:${PROMOTE_ARTIFACT_PASSWORD}`,
-                '-H', 'Content-Type: application/json',
-                '--request', 'POST',
-                '-d', `${json}`,
-                `${PROMOTE_ARTIFACT_WEBHOOK}`
-              ])
+            for (const json of jsons) {
+                if (await exec.exec('curl', [
+                    '--tlsv1.3', '--compressed', '-sS', '-m', '10',
+                    '-u', `${PROMOTE_ARTIFACT_USERNAME}:${PROMOTE_ARTIFACT_PASSWORD}`,
+                    '-H', 'Content-Type: application/json',
+                    '--request', 'POST',
+                    '-d', `${json}`,
+                    `${PROMOTE_ARTIFACT_WEBHOOK}`
+                ]) !== 0) {
+                    core.setFailed(`Failed to promote artifact: ${json}`);
+                }
             }

@@ -3,70 +3,79 @@ name: Gradle CI
 on:
   workflow_call:
     inputs:
+      # Git
+      submodules:
+        description: |
+          Whether to checkout submodules: 'true' to checkout submodules or 'recursive' to recursively checkout submodules.
+        required: false
+        type: string
+        default: 'false'
+
+      # Git Version
       project_path:
-        description: 'The path to the project to build. Used for Git Version.'
+        description: |
+          The path to the project to build. Leave this unset for the root project.
+          Used for Git Version to get the project version number, and displayed alongside the repo name in Discord notifications.
         required: false
         type: string
         default: '.'
+
+      # Java
       java:
-        description: 'The version of Java to use to run Gradle' # Note: Gradle's Java toolchains feature is used for compiling, which is separate from this
+        description: |
+          The version of Java to use to run Gradle. Note that this Java version is used to run Gradle itself, which is not used to compile the project.
+          If the GitHub Actions runner contains this version, it will be used without any additional setup (i.e. an LTS version with only the major number).
+          See https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md
         required: false
         type: string
-        default: '17'
-      gradle_tasks:
-        description: 'The Gradle tasks to run'
+        default: '21'
+      java_distro:
+        description: |
+          The Java distribution to use. Setting this will cause the runner-local Java to not be used.
+          See https://github.com/actions/setup-java?tab=readme-ov-file#supported-distributions
         required: false
         type: string
-        default: 'publish'
+        default: ''
+
+      # Gradle
       gradle_setup:
-        description: 'Commands to run before executing the gradle command'
+        description: |
+          Commands to run before executing the gradle command.
         required: false
         type: string
+      gradle_tasks:
+        description: |
+          The Gradle tasks to run.
+        required: false
+        type: string
+        default: 'check publish'
+
+      # Artifact Promotion
       artifact_group:
-        description: 'Maven group'
+        description: |
+          The maven group for the artifact to promote. You can promote multiple artifacts by specifying multiple groups and artifacts (separated by ',').
+          If there is only one group defined, it will be used for all artifacts. They are used in the same order as the artifacts.
         required: false
         type: string
         default: 'net.minecraftforge'
       artifact_name:
-        description: 'Maven artifact'
-        required: false
-        type: string
-        default: 'dont promote'
-      artifact_groups:
-        description: 'Maven groups CSV for multi-promotion. If only one group is specified, it will be used for all artifacts.'
-        required: false
-        type: string
-        default: 'net.minecraftforge'
-      artifact_names:
-        description: 'Maven artifacts CSV for multi-promotion'
+        description: |
+          The maven artifact name to promote. You can promote multiple artifacts by specifying multiple groups and artifacts (separated by ',').
         required: false
         type: string
         default: ''
-      artifact_version:
-        description: 'Maven version'
-        required: false
-        type: string
-        default: '???'
       promotion_type:
         description: 'Promotion type'
         required: false
         type: string
         default: 'latest'
-      submodules:
-        description: 'Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules.'
-        required: false
-        type: string
-        default: 'false'
 
     secrets:
+      # Discord Build Notification
       DISCORD_WEBHOOK:
         required: false
-      PROMOTE_ARTIFACT_WEBHOOK:
-        required: false
-      PROMOTE_ARTIFACT_USERNAME:
-        required: false
-      PROMOTE_ARTIFACT_PASSWORD:
-        required: false
+
+      # Gradle
       MAVEN_USER:
         required: false
       MAVEN_PASSWORD:
@@ -83,14 +92,24 @@ on:
         required: false
       GRADLE_PUBLISH_SECRET:
         required: false
+      GRADLE_CACHE_KEY:
+        required: false
+
+      # Artifact Promotion
+      PROMOTE_ARTIFACT_WEBHOOK:
+        required: false
+      PROMOTE_ARTIFACT_USERNAME:
+        required: false
+      PROMOTE_ARTIFACT_PASSWORD:
+        required: false
 
 permissions:
   contents: read
 
 jobs:
   git-version:
-    name: Calculate Project Version
-    uses: MinecraftForge/SharedActions/.github/workflows/git-version.yml@v0
+    name: Run Git Version
+    uses: Forge-Automation-Testing/SharedActions/.github/workflows/git-version.yml@v0
     with:
       project_path: ${{ inputs.project_path }}
       submodules: ${{ inputs.submodules }}
@@ -98,8 +117,9 @@ jobs:
   notify-discord-start:
     name: Notify Discord (start)
     needs: [ 'git-version' ]
-    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@v0
+    uses: Forge-Automation-Testing/SharedActions/.github/workflows/discord-build-notifier.yml@v0
     with:
+      project_path: ${{ inputs.project_path }}
       build_status: started
       build_number: ${{ needs.git-version.outputs.build_number }}
     secrets:
@@ -118,28 +138,49 @@ jobs:
           fetch-depth: 1000
           fetch-tags: true
 
-      - name: Work around actions/checkout#2041
+      - name: Checkout Repository (extra)
         id: checkout-tags
-        # language=bash
-        run: git fetch --tags
-
-      - name: Setup Java ${{ inputs.java }}
-        id: setup-java
-        # https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#java
-        # We use this instead of the recommended `actions/setup-java` action because this is faster
+        shell: bash
         # language=bash
         run: |-
-          echo "JAVA_HOME=$(echo $JAVA_HOME_${{ inputs.java }}_X64)" >> "$GITHUB_ENV"
+          if [[ -z $(git tag --list) ]]; then
+            git fetch --tags
+          else
+            echo "::warning title=actions/checkout#2041 fixed::The bug that caused actions/checkout to not fetch tags has been fixed. This step can be safely deleted."
+          fi
 
-      - name: Setup Gradle Wrapper
-        id: setup-gradlew
+      - name: Setup Java ${{ inputs.java }} (simple)
+        id: setup-java-simple
+        if: ${{ inputs.java_distro == '' }}
+        continue-on-error: true
+        # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md
         # language=bash
-        run: chmod +x ./gradlew
+        run: |-
+          FOUND_JAVA=$(echo $JAVA_HOME_${{ inputs.java }}_X64)
+          if [[ -n $FOUND_JAVA ]]; then
+            echo "JAVA_HOME=$FOUND_JAVA" >> "$GITHUB_ENV"
+          else
+            exit 1
+          fi
+
+      - name: Setup Java ${{ inputs.java }} (advanced)
+        id: setup-java-advanced
+        uses: actions/setup-java@v4
+        if: ${{ steps.setup-java-simple.outcome != 'success' }}
+        with:
+          distribution: ${{ inputs.java_distro != '' && inputs.java_distro || 'temurin' }}
+          java-version: ${{ inputs.java }}
+
+      - name: Confirm Java Version
+        id: setup-java-confirm
+        # language=bash
+        run: |-
+          echo "::notice title=Java Version Info::$(java -Xinternalversion)"
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: wrapper
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_KEY }}
 
       - name: Set Maven Info
         env:
@@ -185,36 +226,22 @@ jobs:
     name: Notify Discord (end)
     needs: [ 'git-version', 'gradle' ]
     if: ${{ always() }}
-    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@v0
+    uses: Forge-Automation-Testing/SharedActions/.github/workflows/discord-build-notifier.yml@v0
     with:
+      project_path: ${{ inputs.project_path }}
       build_status: ${{ needs.gradle.result }}
       build_number: ${{ needs.git-version.outputs.build_number }}
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
-  promote-artifact:
-    name: Promote artifact
+  promote-artifacts:
+    name: Promote artifact${{ contains( inputs.artifact_name, ',' ) == 'true' && 's' || '' }}
     needs: [ 'git-version', 'gradle' ]
-    if: needs.gradle.result == 'success' && inputs.artifact_name != 'dont promote' && inputs.artifact_names == ''
-    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifact.yml@v0
+    if: ${{ needs.gradle.result == 'success' && inputs.artifact_name != '' }}
+    uses: Forge-Automation-Testing/SharedActions/.github/workflows/promote-artifacts.yml@v0
     with:
       group: ${{ inputs.artifact_group }}
       artifact: ${{ inputs.artifact_name }}
-      version: ${{ needs.git-version.outputs.build_number }}
-      type: ${{ inputs.promotion_type }}
-    secrets:
-      PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
-      PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
-      PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
-
-  promote-artifacts:
-    name: Promote artifacts
-    needs: [ 'git-version', 'gradle' ]
-    if: needs.gradle.result == 'success' && inputs.artifact_name == 'dont promote' && inputs.artifact_names != ''
-    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@v0
-    with:
-      groups: ${{ inputs.artifact_groups }}
-      artifacts: ${{ inputs.artifact_names }}
       version: ${{ needs.git-version.outputs.build_number }}
       type: ${{ inputs.promotion_type }}
     secrets:
