@@ -52,12 +52,15 @@ jobs:
         # language=bash
         run: echo "JAVA_HOME=$(echo $JAVA_HOME_17_X64)" >> "$GITHUB_ENV"
 
-      - name: Download GitVersion
-        id: git-version-download
-        # language=bash
-        run: wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/${{ inputs.version }}/git-version-${{ inputs.version }}-fatjar.jar' -o ${{ runner.temp }}/git-version.jar
-
       - name: Get Version using GitVersion
         id: git-version
         # language=bash
-        run: echo "GIT_VERSION=$(java -jar ${{ runner.temp }}/git-version.jar --project-dir ${{ inputs.project_path }})" >> $GITHUB_ENV
+        run: |-
+          wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/${{ inputs.version }}/git-version-${{ inputs.version }}-fatjar.jar' -o ${{ runner.temp }}/git-version.jar
+          GIT_VERSION=$(java -jar ${{ runner.temp }}/git-version.jar --project-dir ${{ inputs.project_path }})
+          if [[ -z $GIT_VERSION ]]; then
+            echo "Failed to get version number! Refusing to build."
+            exit 1
+          fi
+          
+          echo "GIT_VERSION=$GIT_VERSION" >> $GITHUB_ENV
