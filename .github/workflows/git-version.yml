@@ -56,11 +56,16 @@ jobs:
         id: git-version
         # language=bash
         run: |-
-          wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/${{ inputs.version }}/git-version-${{ inputs.version }}-fatjar.jar' -o ${{ runner.temp }}/git-version.jar
-          GIT_VERSION=$(java -jar ${{ runner.temp }}/git-version.jar --project-dir ${{ inputs.project_path }})
+          wget 'https://maven.minecraftforge.net/net/minecraftforge/git-version/${{ inputs.version }}/git-version-${{ inputs.version }}-fatjar.jar' -o git-version.jar
+          echo "MD5: $(md5sum git-version.jar)"
+          GIT_VERSION=$(java -jar git-version.jar --project-dir ${{ inputs.project_path }})
           if [[ $? -eq 0 ]] && [[ -z $GIT_VERSION ]]; then
             echo "Failed to get version number! Refusing to build."
             exit 1
           fi
+          
+          echo "FOUND GIT VERSION $GIT_VERSION"
+          
+          exit 1
           
           echo "GIT_VERSION=$GIT_VERSION" >> $GITHUB_ENV
