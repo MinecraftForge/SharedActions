@@ -78,9 +78,9 @@ jobs:
           artifact: ${{ inputs.artifact }}
           version: ${{ inputs.version }}
           type: ${{ inputs.type }}
-          PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
-          PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
-          PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
+          webhook: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
+          username: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+          password: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
         with:
           result-encoding: string
           # language=js
@@ -102,18 +102,23 @@ jobs:
               }))
             }
             
-            const { PROMOTE_ARTIFACT_WEBHOOK, PROMOTE_ARTIFACT_USERNAME, PROMOTE_ARTIFACT_PASSWORD } = process.env
+            const { webhook, username, password } = process.env
             
-            /** @type string[] */
+            let success = true
             for (const json of jsons) {
                 if (await exec.exec('curl', [
                     '--tlsv1.3', '--compressed', '-sS', '-m', '10',
-                    '-u', `${PROMOTE_ARTIFACT_USERNAME}:${PROMOTE_ARTIFACT_PASSWORD}`,
+                    '-u', `${username}:${password}`,
                     '-H', 'Content-Type: application/json',
                     '--request', 'POST',
                     '-d', `${json}`,
-                    `${PROMOTE_ARTIFACT_WEBHOOK}`
+                    `${webhook}`
                 ]) !== 0) {
-                    core.setFailed(`Failed to promote artifact: ${json}`);
+                    core.error(`Failed to promote artifact: ${json}`, {title: 'Failed to promote artifact'})
+                    success = false
                 }
+            }
+            
+            if (!success) {
+                core.setFailed('Failed to promote one or more artifacts.');
             }
