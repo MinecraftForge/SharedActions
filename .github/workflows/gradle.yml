@@ -178,9 +178,20 @@ jobs:
           echo "::notice title=Java Version Info::$(java -Xinternalversion)"
 
       - name: Setup Gradle
+        id: setup-gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_KEY }}
+
+      - name: Setup Gradle (extra)
+        id: setup-gradle-executable
+        shell: bash
+        # language=bash
+        run: |-
+          if [[ ! -x ./gradlew ]]; then
+            chmod +x ./gradlew
+            echo "::notice title=Gradle Wrapper script not executable::The 'gradlew' wrapper script is not executable for linux machines on your repository. Consider setting it manually to make future builds go faster."
+          fi
 
       - name: Set Maven Info
         env:
