@@ -109,7 +109,7 @@ permissions:
 jobs:
   git-version:
     name: Run Git Version
-    uses: Forge-Automation-Testing/SharedActions/.github/workflows/git-version.yml@v0
+    uses: MinecraftForge/SharedActions/.github/workflows/git-version.yml@v0
     with:
       project_path: ${{ inputs.project_path }}
       submodules: ${{ inputs.submodules }}
@@ -117,7 +117,7 @@ jobs:
   notify-discord-start:
     name: Notify Discord (start)
     needs: [ 'git-version' ]
-    uses: Forge-Automation-Testing/SharedActions/.github/workflows/discord-build-notifier.yml@v0
+    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@v0
     with:
       project_path: ${{ inputs.project_path }}
       build_status: started
@@ -226,7 +226,7 @@ jobs:
     name: Notify Discord (end)
     needs: [ 'git-version', 'gradle' ]
     if: ${{ always() }}
-    uses: Forge-Automation-Testing/SharedActions/.github/workflows/discord-build-notifier.yml@v0
+    uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@v0
     with:
       project_path: ${{ inputs.project_path }}
       build_status: ${{ needs.gradle.result }}
@@ -238,7 +238,7 @@ jobs:
     name: Promote artifact${{ contains( inputs.artifact_name, ',' ) == 'true' && 's' || '' }}
     needs: [ 'git-version', 'gradle' ]
     if: ${{ needs.gradle.result == 'success' && inputs.artifact_name != '' }}
-    uses: Forge-Automation-Testing/SharedActions/.github/workflows/promote-artifacts.yml@v0
+    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@v0
     with:
       group: ${{ inputs.artifact_group }}
       artifact: ${{ inputs.artifact_name }}

@@ -22,4 +22,4 @@ jobs:
         with:
           gh_app_key: ${{ secrets.GH_APP_KEY }}
           gh_app_name: ${{ secrets.GH_APP_NAME }}
-          config_directory: Forge-Automation-Testing/SharedActions:configs@v0
+          config_directory: MinecraftForge/SharedActions:configs@v0
