@@ -41,14 +41,14 @@ jobs:
           ref_type: ${{ github.ref_type }}
           ref_name: ${{ github.ref_name }}
           author_icon_url: ${{ inputs.author_icon_url }}
-          discord_webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
           result-encoding: string
           # language=js
           script: |-
             'use strict';
             const capitalise = (str) => str.charAt(0).toUpperCase() + str.slice(1)
-            const {project_path, build_status, build_number, ref_type, ref_name, author_icon_url, discord_webhook} = process.env
+            const {project_path, build_status, build_number, ref_type, ref_name, author_icon_url, DISCORD_WEBHOOK} = process.env
             
             let title = capitalise(build_status)
             let reason
@@ -118,7 +118,7 @@ jobs:
                 '-H', 'Content-Type: application/json',
                 '--request', 'POST',
                 '-d', `${jsonString}`,
-                `${discord_webhook}`
+                `${DISCORD_WEBHOOK}`
             ]) !== 0) {
                 core.setFailed(`Failed to send Discord notification: ${jsonString}`);
             }

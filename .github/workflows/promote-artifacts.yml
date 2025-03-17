@@ -78,16 +78,15 @@ jobs:
           artifact: ${{ inputs.artifact }}
           version: ${{ inputs.version }}
           type: ${{ inputs.type }}
-          webhook: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
-          username: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
-          password: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
+          PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
+          PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+          PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
         with:
           result-encoding: string
           # language=js
           script: |
             'use strict';
-            const { version, type } = process.env
-            const { group, artifact } = process.env
+            const { version, type, group, artifact, PROMOTE_ARTIFACT_WEBHOOK, PROMOTE_ARTIFACT_USERNAME, PROMOTE_ARTIFACT_PASSWORD } = process.env
             const groups = group.split(',')
             const artifacts = artifact.split(',')
             
@@ -102,17 +101,15 @@ jobs:
               }))
             }
             
-            const { webhook, username, password } = process.env
-            
             let success = true
             for (const json of jsons) {
                 if (await exec.exec('curl', [
                     '--tlsv1.3', '--compressed', '-sS', '-m', '10',
-                    '-u', `${username}:${password}`,
+                    '-u', `${PROMOTE_ARTIFACT_USERNAME}:${PROMOTE_ARTIFACT_PASSWORD}`,
                     '-H', 'Content-Type: application/json',
                     '--request', 'POST',
                     '-d', `${json}`,
-                    `${webhook}`
+                    `${PROMOTE_ARTIFACT_WEBHOOK}`
                 ]) !== 0) {
                     core.error(`Failed to promote artifact: ${json}`, {title: 'Failed to promote artifact'})
                     success = false
