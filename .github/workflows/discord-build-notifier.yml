@@ -15,11 +15,15 @@ on:
         required: true
         type: string
       author_icon_url:
+        description: |
+          The URL to the author's icon to use in the Discord notification.
         required: false
         type: string
         default: 'https://avatars.githubusercontent.com/u/1390178'
     secrets:
       DISCORD_WEBHOOK:
+        description: |
+          The Discord webhook URL to send the build notification to.
         required: true
 
 jobs:

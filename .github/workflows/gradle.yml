@@ -70,8 +70,10 @@ on:
         type: string
         default: 'latest'
 
-     # Discord
+      # Discord
       author_icon_url:
+        description: |
+          The URL to the author's icon to use in the Discord notification.
         required: false
         type: string
         default: 'https://avatars.githubusercontent.com/u/1390178'
@@ -79,34 +81,78 @@ on:
     secrets:
       # Discord Build Notification
       DISCORD_WEBHOOK:
+        description: |
+          The Discord webhook URL to send the build notification to.
         required: false
 
       # Gradle
+      GRADLE_CACHE_KEY:
+        description: |
+          The encryption key to use for Gradle caches.
+          See https://github.com/gradle/actions/blob/main/docs/setup-gradle.md#saving-configuration-cache-data
+        required: false
+
+      # Publishing (Normal)
       MAVEN_USER:
+        description: |
+          The username to use for publishing Maven artifacts.
+          If Gradle project is using GradleUtils and this action doesn't have this set, the build will fail on publish.
         required: false
       MAVEN_PASSWORD:
+        description: |
+          The password to use for publishing Maven artifacts.
+          If Gradle project is using GradleUtils and this action doesn't have this set, the build will fail on publish.
         required: false
-      SIGN_KEY_ALIAS:
-        required: false
-      SIGN_KEY_PASSWORD:
-        required: false
-      SIGN_KEYSTORE_PASSWORD:
-        required: false
-      SIGN_KEYSTORE_DATA:
-        required: false
+
+      # Publishing (Gradle Plugins)
       GRADLE_PUBLISH_KEY:
+        description: |
+          The API key to use for publishing Gradle plugins. If this is set, the API secret must also be set.
+          If this action doesn't have this set, the build will fail on publishPlugins.
         required: false
       GRADLE_PUBLISH_SECRET:
+        description: |
+          The API secret to use for publishing Gradle plugins. If this is set, the API key must also be set.
+          If this action doesn't have this set, the build will fail on publishPlugins.
         required: false
-      GRADLE_CACHE_KEY:
+
+      # Signing
+      SIGN_KEY_ALIAS:
+        description: |
+          The key alias (username) to use for jar signing.
+          Setting this is highly recommended.
+        required: false
+      SIGN_KEY_PASSWORD:
+        description: |
+          The key password to use for jar signing.
+          Setting this is highly recommended.
+        required: false
+      SIGN_KEYSTORE_PASSWORD:
+        description: |
+          The keystore password for the key to use for jar signing.
+          Setting this is highly recommended.
+        required: false
+      SIGN_KEYSTORE_DATA:
+        description: |
+          The keystore in base64 for the key to use for jar signing.
+          Setting this is highly recommended.
         required: false
 
       # Artifact Promotion
       PROMOTE_ARTIFACT_WEBHOOK:
+        description: |
+          DEPRECATED! WILL BE REMOVED IN v1 ONCE GRADLEUTILS HANDLES ARTIFACT PROMOTION!
+          The webhook to use for promoting artifacts on the Forge Files site.
         required: false
       PROMOTE_ARTIFACT_USERNAME:
+        description: |
+          DEPRECATED! WILL BE REMOVED IN v1 ONCE GRADLEUTILS HANDLES ARTIFACT PROMOTION!
+          The username to use for promoting artifacts on the Forge Files site.
         required: false
       PROMOTE_ARTIFACT_PASSWORD:
+        description: |
+          DEPRECATED! WILL BE REMOVED IN v1 ONCE GRADLEUTILS HANDLES ARTIFACT PROMOTION!
+          The password to use for promoting artifacts on the Forge Files site.
         required: false
 
 permissions:
