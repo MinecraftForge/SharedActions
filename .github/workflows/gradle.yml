@@ -70,6 +70,12 @@ on:
         type: string
         default: 'latest'
 
+     # Discord
+      author_icon_url:
+        required: false
+        type: string
+        default: 'https://avatars.githubusercontent.com/u/1390178'
+
     secrets:
       # Discord Build Notification
       DISCORD_WEBHOOK:
@@ -122,6 +128,7 @@ jobs:
       project_path: ${{ inputs.project_path }}
       build_status: started
       build_number: ${{ needs.git-version.outputs.build_number }}
+      author_icon_url: ${{ inputs.author_icon_url }}
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
@@ -242,6 +249,7 @@ jobs:
       project_path: ${{ inputs.project_path }}
       build_status: ${{ needs.gradle.result }}
       build_number: ${{ needs.git-version.outputs.build_number }}
+      author_icon_url: ${{ inputs.author_icon_url }}
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
