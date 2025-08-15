@@ -192,14 +192,12 @@ jobs:
           fetch-tags: true
 
       - name: Checkout Repository (extra)
-        id: checkout-tags
+        id: checkout-extra
         shell: bash
         # language=bash
         run: |-
           if [[ -z $(git tag --list) ]]; then
             git fetch --tags
-          else
-            echo "::warning title=actions/checkout#2041 fixed::The bug that caused actions/checkout to not fetch tags has been fixed. This step can be safely deleted."
           fi
 
       - name: Setup Java ${{ inputs.java }} (simple)

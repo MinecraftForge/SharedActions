@@ -7,7 +7,7 @@ on:
         description: 'The version of GitVersion to use'
         required: false
         type: string
-        default: '0.5.2'
+        default: '0.6.8'
       project_path:
         description: 'The path to the project to build. Used for Git Version.'
         required: false
@@ -56,8 +56,8 @@ jobs:
         id: git-version-cache
         uses: actions/cache@v4
         with:
-          key: git-version-${{ inputs.version }}
-          path: git-version.jar
+          key: gitversion-${{ inputs.version }}
+          path: gitversion.jar
 
       - name: Download Git Version
         id: git-version-download
