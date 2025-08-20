@@ -7,7 +7,7 @@ on:
         description: 'The version of GitVersion to use'
         required: false
         type: string
-        default: '0.7.2'
+        default: '0.7.3'
       project_path:
         description: 'The path to the project to build. Used for Git Version.'
         required: false
