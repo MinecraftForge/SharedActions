@@ -235,10 +235,14 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_KEY }}
 
       - name: Setup Gradle (extra)
+        env:
+          GRADLE_ENCRYPTION_KEY: ${{ secrets.GRADLE_CACHE_KEY }}
         id: setup-gradle-executable
         shell: bash
         # language=bash
         run: |-
+          echo "GRADLE_ENCRYPTION_KEY=$GRADLE_ENCRYPTION_KEY" >> "$GITHUB_ENV"
+          
           if [[ ! -x ./gradlew ]]; then
             chmod +x ./gradlew
             echo "::notice title=Gradle Wrapper script not executable::The 'gradlew' wrapper script is not executable for linux machines on your repository. Consider setting it manually to make future builds go faster."
