@@ -177,7 +177,6 @@ jobs:
 
   gradle:
     name: Run Gradle
-    needs: [ 'git-version' ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -309,18 +308,3 @@ jobs:
       author_icon_url: ${{ inputs.author_icon_url }}
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-
-  promote-artifacts:
-    name: Promote artifact${{ contains( inputs.artifact_name, ',' ) == 'true' && 's' || '' }}
-    needs: [ 'git-version', 'gradle' ]
-    if: ${{ needs.gradle.result == 'success' && inputs.artifact_name != '' }}
-    uses: MinecraftForge/SharedActions/.github/workflows/promote-artifacts.yml@v0
-    with:
-      group: ${{ inputs.artifact_group }}
-      artifact: ${{ inputs.artifact_name }}
-      version: ${{ needs.git-version.outputs.build_number }}
-      type: ${{ inputs.promotion_type }}
-    secrets:
-      PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
-      PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
-      PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
