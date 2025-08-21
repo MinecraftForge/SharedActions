@@ -141,17 +141,14 @@ on:
       # Artifact Promotion
       PROMOTE_ARTIFACT_WEBHOOK:
         description: |
-          DEPRECATED! WILL BE REMOVED IN v1 ONCE GRADLEUTILS HANDLES ARTIFACT PROMOTION!
           The webhook to use for promoting artifacts on the Forge Files site.
         required: false
       PROMOTE_ARTIFACT_USERNAME:
         description: |
-          DEPRECATED! WILL BE REMOVED IN v1 ONCE GRADLEUTILS HANDLES ARTIFACT PROMOTION!
           The username to use for promoting artifacts on the Forge Files site.
         required: false
       PROMOTE_ARTIFACT_PASSWORD:
         description: |
-          DEPRECATED! WILL BE REMOVED IN v1 ONCE GRADLEUTILS HANDLES ARTIFACT PROMOTION!
           The password to use for promoting artifacts on the Forge Files site.
         required: false
 
@@ -257,6 +254,18 @@ jobs:
         run: |-
           echo "MAVEN_USER=$MAVEN_USER" >> "$GITHUB_ENV"
           echo "MAVEN_PASSWORD=$MAVEN_PASSWORD" >> "$GITHUB_ENV"
+
+      - name: Set Files Promotion Info
+        env:
+          PROMOTE_ARTIFACT_WEBHOOK: ${{ secrets.PROMOTE_ARTIFACT_WEBHOOK }}
+          PROMOTE_ARTIFACT_USERNAME: ${{ secrets.PROMOTE_ARTIFACT_USERNAME }}
+          PROMOTE_ARTIFACT_PASSWORD: ${{ secrets.PROMOTE_ARTIFACT_PASSWORD }}
+        if: ${{ env.PROMOTE_ARTIFACT_WEBHOOK != '' }}
+        # language=bash
+        run: |-
+          echo "PROMOTE_ARTIFACT_WEBHOOK=$PROMOTE_ARTIFACT_WEBHOOK" >> "$GITHUB_ENV"
+          echo "PROMOTE_ARTIFACT_USERNAME=$PROMOTE_ARTIFACT_USERNAME" >> "$GITHUB_ENV"
+          echo "PROMOTE_ARTIFACT_PASSWORD=$PROMOTE_ARTIFACT_PASSWORD" >> "$GITHUB_ENV"
 
       - name: Set Signing Info
         env:
