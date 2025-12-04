@@ -67,7 +67,7 @@ jobs:
           # language=js
           script: |
             'use strict';
-            const { build_number, commit_desc, commit_tag } = process.env
+            const { build_number, commit_desc, commit_tag, legacy_prefix, legacy_build_number } = process.env
             
             // if we have a build number, use it.
             if (build_number !== '???') return build_number
