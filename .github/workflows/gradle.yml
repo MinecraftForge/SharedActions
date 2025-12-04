@@ -43,6 +43,16 @@ on:
         required: false
         type: string
         default: "???"
+      legacy_prefix:
+        description: "Prefix for legacy version numbering system"
+        required: false
+        type: number
+        default: 0
+      legacy_build_number:
+        description: "Base build number for legacy versioning system"
+        required: false
+        type: number
+        default: 0
       promotion_type:
         description: "Promotion type"
         required: false
@@ -89,6 +99,8 @@ jobs:
     uses: MinecraftForge/SharedActions/.github/workflows/discord-build-notifier.yml@main
     with:
       build_status: started
+      legacy_prefix: ${{ inputs.legacy_prefix }}
+      legacy_build_number: ${{ inputs.legacy_build_number }}      
     secrets:
       DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
