@@ -81,14 +81,14 @@ jobs:
             // if the split desc has more than one -, it means it probably has the info we need
             if (splitDesc.length > 1) {
                 let offset = parseInt(splitDesc[1]);
-                if (legacy_build_number != 0) {
-                    offset = legacy_build_number + offset;
+                if (legacy_build_number != '0') {
+                    offset = parseInt(legacy_build_number) + offset;
                 }
                 
                 buildNumber = splitDesc[0] + '.' + offset.toString();
                 
-                if (legacy_prefix != 0) {
-                    buildNumber = legacy_prefix.toString() + '.' + buildNumber;
+                if (legacy_prefix != '0') {
+                    buildNumber = legacy_prefix + '.' + buildNumber;
                 }
             }
             
