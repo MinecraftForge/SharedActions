@@ -34,7 +34,7 @@ jobs:
     steps:
       - name: Checkout Repository
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: ${{ inputs.submodules }}
           fetch-depth: 1000
@@ -54,7 +54,7 @@ jobs:
 
       - name: Cache Git Version
         id: git-version-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           key: gitversion-${{ inputs.version }}
           path: gitversion.jar
